@@ -3400,3 +3400,7 @@ fontWeight	Thin	Πολύ λεπτά
 	API charges may apply. The result becomes a new layer within your selection.	Ενδέχεται να υπάρχουν χρεώσεις API. Το αποτέλεσμα προστίθεται ως νέο επίπεδο μέσα στην επιλογή.
 	Images up to 2048 × 2048. Cancellation discards results; remote charges may still apply.	Εικόνες έως 2048 × 2048. Η ακύρωση απορρίπτει το αποτέλεσμα· ενδέχεται να παραμείνουν χρεώσεις του παρόχου.
 	Configure an image provider in AI Integrations.	Ρυθμίστε έναν πάροχο εικόνων στις ενσωματώσεις AI.
+	Generative Remove…	Παραγωγική αφαίρεση…
+	Generative Remove	Παραγωγική αφαίρεση
+	Objects to remove (optional)	Αντικείμενα προς αφαίρεση (προαιρετικό)
+	Select the object with a small margin of background. The background will be reconstructed.	Επιλέξτε το αντικείμενο με ένα μικρό περιθώριο φόντου. Το φόντο θα ανακατασκευαστεί.

@@ -2,7 +2,8 @@
 
 Provider-independent protocol v1 for generative image operations. Implements bounded PNG transport,
 request validation and the `Backend` trait. It depends on no other workspace crate, filesystem,
-HTTP client or UI. The implemented operation is `Fill`.
+HTTP client or UI. The implemented operations are `Fill` and `Remove`. A request carries the complete editing
+instructions in `prompt`; `Remove` asks for object removal and background reconstruction.
 
 See [the integration guide](../../docs/generative-ai.md) for capabilities, host responsibilities,
 credentials and how to replace an in-process backend with an IPC client.

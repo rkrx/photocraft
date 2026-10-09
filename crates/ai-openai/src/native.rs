@@ -187,6 +187,23 @@ mod tests {
         worker.join().unwrap();
     }
     #[test]
+    fn removal_instructions_use_the_same_bounded_image_edit_transport() {
+        let backend = OpenAi::new("test-key").unwrap();
+        let mut request = request();
+        request.operation = photocraft_ai::Operation::Remove;
+        request.prompt = "Remove the cable and reconstruct the background.".into();
+        let png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aL1sAAAAASUVORK5CYII=";
+        let response = serde_json::json!({"data": [{"b64_json": png}]}).to_string();
+        let (endpoint, worker) = server("200 OK", response);
+        backend.generate_at(&request, &|| false, &endpoint).unwrap();
+        let body = worker.join().unwrap();
+        assert_eq!(body["prompt"], request.prompt);
+        assert_eq!(body["model"], request.model);
+        assert_eq!(body["images"][0]["image_url"], request.source.data_url());
+        assert_eq!(body["mask"]["image_url"], request.mask.data_url());
+        assert!(!body.to_string().contains("test-key"));
+    }
+    #[test]
     fn malformed_provider_responses_fail() {
         for bytes in [b"no JSON".as_slice(), b"{}", br#"{"data":[{"url":"https://example.org"}]}"#, br#"{"data":[{"b64_json":"?"}]}"#] {
             assert!(parse_response(bytes).is_err());

@@ -2328,3 +2328,7 @@ fontWeight	Italic	Kursiv
 	Images up to 2048 × 2048. Cancellation discards results; remote charges may still apply.	Bilder bis 2048 × 2048. Abbrechen verwirft das Ergebnis; beim Anbieter können trotzdem Kosten entstehen.
 	Configure an image provider in AI Integrations.	Richte einen Bildanbieter unter KI-Integrationen ein.
 	AI Integrations	KI-Integrationen
+	Generative Remove…	Generatives Entfernen…
+	Generative Remove	Generatives Entfernen
+	Objects to remove (optional)	Zu entfernende Objekte (optional)
+	Select the object with a small margin of background. The background will be reconstructed.	Wähle das Objekt mit etwas Hintergrund aus. Der Hintergrund wird rekonstruiert.

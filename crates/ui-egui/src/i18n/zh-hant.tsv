@@ -2267,3 +2267,7 @@ fontWeight	Italic	斜體
 	Images up to 2048 × 2048. Cancellation discards results; remote charges may still apply.	影像最大為 2048 × 2048。取消會捨棄結果，但提供者仍可能收費。
 	Configure an image provider in AI Integrations.	請在 AI 整合中設定影像提供者。
 	AI Integrations	AI 整合
+	Generative Remove…	生成式移除…
+	Generative Remove	生成式移除
+	Objects to remove (optional)	要移除的物件（選填）
+	Select the object with a small margin of background. The background will be reconstructed.	選取物件時包含少量周圍背景。背景將被重建。

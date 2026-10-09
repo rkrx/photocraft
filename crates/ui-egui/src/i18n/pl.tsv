@@ -3312,3 +3312,7 @@ cameraRaw	Roughness	Chropowatość
 	API charges may apply. The result becomes a new layer within your selection.	Mogą obowiązywać opłaty API. Wynik zostanie dodany jako nowa warstwa w zaznaczeniu.
 	Images up to 2048 × 2048. Cancellation discards results; remote charges may still apply.	Obrazy do 2048 × 2048. Anulowanie odrzuca wynik; dostawca nadal może naliczyć opłaty.
 	Configure an image provider in AI Integrations.	Skonfiguruj dostawcę obrazów w integracjach AI.
+	Generative Remove…	Usuwanie generatywne…
+	Generative Remove	Usuwanie generatywne
+	Objects to remove (optional)	Obiekty do usunięcia (opcjonalnie)
+	Select the object with a small margin of background. The background will be reconstructed.	Zaznacz obiekt z niewielkim marginesem tła. Tło zostanie odtworzone.

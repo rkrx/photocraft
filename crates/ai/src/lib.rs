@@ -64,6 +64,8 @@ pub fn dimensions(width: u32, height: u32) -> Result<()> {
 #[serde(rename_all = "snake_case")]
 pub enum Operation {
     Fill,
+    /// Remove selected objects and reconstruct the surrounding background.
+    Remove,
 }
 
 /// No paths, credentials, engine references or editor document types cross this boundary.
@@ -141,5 +143,18 @@ mod tests {
         assert!(bad.validate().is_err());
         assert!(dimensions(0, 1).is_err());
         assert!(PngImage::from_bytes(1, 1, b"not PNG").is_err());
+    }
+    #[test]
+    fn removal_is_an_explicit_wire_operation() {
+        let mut r = request();
+        r.operation = Operation::Remove;
+        r.prompt = "Remove selected objects and reconstruct the background.".into();
+        r.validate().unwrap();
+        let wire = serde_json::to_value(&r).unwrap();
+        assert_eq!(wire["operation"], "remove");
+        assert_eq!(serde_json::from_value::<Request>(wire).unwrap(), r);
+        let mut wire = serde_json::to_value(r).unwrap();
+        wire["operation"] = serde_json::json!("unknown");
+        assert!(serde_json::from_value::<Request>(wire).is_err());
     }
 }

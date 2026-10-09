@@ -3397,3 +3397,7 @@ cameraRaw	Masking	Маскування
 	API charges may apply. The result becomes a new layer within your selection.	Можливі витрати на API. Результат додається новим шаром усередині виділення.
 	Images up to 2048 × 2048. Cancellation discards results; remote charges may still apply.	Зображення до 2048 × 2048. Скасування відкидає результат; постачальник усе одно може стягнути плату.
 	Configure an image provider in AI Integrations.	Налаштуйте постачальника зображень в інтеграціях ШІ.
+	Generative Remove…	Генеративне видалення…
+	Generative Remove	Генеративне видалення
+	Objects to remove (optional)	Об’єкти для видалення (необов’язково)
+	Select the object with a small margin of background. The background will be reconstructed.	Виділіть об’єкт із невеликим запасом фону. Фон буде відновлено.

@@ -3314,3 +3314,7 @@ fontWeight	Italic	斜体
 	API charges may apply. The result becomes a new layer within your selection.	API料金が発生する場合があります。結果は選択範囲内の新しいレイヤーとして追加されます。
 	Images up to 2048 × 2048. Cancellation discards results; remote charges may still apply.	画像は2048 × 2048まで。キャンセルすると結果は破棄されますが、プロバイダーの料金は発生する場合があります。
 	Configure an image provider in AI Integrations.	AI連携で画像プロバイダーを設定してください。
+	Generative Remove…	生成削除…
+	Generative Remove	生成削除
+	Objects to remove (optional)	削除するオブジェクト（任意）
+	Select the object with a small margin of background. The background will be reconstructed.	オブジェクトの周囲の背景を少し含めて選択してください。背景が再構成されます。

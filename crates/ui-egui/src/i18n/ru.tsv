@@ -2563,3 +2563,7 @@ fontWeight	Italic	Курсив
 	Images up to 2048 × 2048. Cancellation discards results; remote charges may still apply.	Изображения до 2048 × 2048. Отмена отбрасывает результат; поставщик всё равно может начислить плату.
 	Configure an image provider in AI Integrations.	Настройте поставщика изображений в интеграциях ИИ.
 	AI Integrations	Интеграции ИИ
+	Generative Remove…	Генеративное удаление…
+	Generative Remove	Генеративное удаление
+	Objects to remove (optional)	Объекты для удаления (необязательно)
+	Select the object with a small margin of background. The background will be reconstructed.	Выделите объект с небольшим запасом фона. Фон будет восстановлен.

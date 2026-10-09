@@ -1,9 +1,9 @@
 # Generative AI in this fork
 
-The first milestone embeds image generation into PhotoCraft while keeping the provider replaceable.
-It implements **Generative Fill** only. The remaining requested operations are future milestones,
-not advertised capabilities. The built-in OpenAI backend is desktop-only; the web build compiles
-and explains that no provider is installed. Existing WASM filter plug-ins are unchanged.
+This fork embeds image generation into PhotoCraft while keeping the provider replaceable.
+It implements **Generative Fill** and **Generative Remove**. The remaining requested operations
+are future milestones, not advertised capabilities. The built-in OpenAI backend is desktop-only;
+the web build compiles and explains that no provider is installed. Existing WASM filter plug-ins are unchanged.
 
 ## Use
 
@@ -13,12 +13,17 @@ and explains that no provider is installed. Existing WASM filter plug-ins are un
    `gpt-image-2.5-sunburst`, the current precise-editing model in the official documentation
    checked on 2026-10-09. Model access and API billing depend on the account.
 2. Open an RGB, Gray, CMYK or Lab image, up to 2048 × 2048 pixels, and make a selection.
-3. Choose **Edit → Generative Fill…**, or its selection context menu row, and enter a description.
-   Provider and model are shown read-only; its AI Integrations button opens the central settings.
+3. Choose **Edit → Generative Fill…** and enter a description, or **Edit → Generative Remove…**
+   to remove selected objects. Both are also in the selection context menu. For removal, include
+   the object, its shadow and a small margin of background in your selection. An optional object
+   description can clarify what to remove; no text is required. The provider is instructed to
+   reconstruct the background from surrounding context rather than add replacement objects.
+   Provider and model are shown read-only; the AI Integrations button opens the central settings.
 4. Confirm sending the **entire visible canvas** and the selection mask to the provider, then
-   click Generate. The canvas is colour-converted to sRGB, encoded as PNG, and sent without
+   click Generate or Remove. The canvas is colour-converted to sRGB, encoded as PNG, and sent without
    document metadata, hidden layers, paths, credentials or the document file.
-5. The result becomes one new raster layer and one undo step. PhotoCraft applies the original
+5. The result becomes one new raster layer above the root layer stack and one undo step,
+   even when a layer inside a hidden group is active. PhotoCraft applies the original
    feathered selection locally: changes outside it cannot affect the composition. Generated
    dimensions are fitted to the canvas; aspect-ratio changes over 3% are rejected.
 
@@ -35,10 +40,27 @@ Agents call `ai.status` to inspect availability and `edit.generativeFill` with:
 {"prompt":"Place a small red vase on the table","model":"gpt-image-2.5-sunburst","consent":true}
 ```
 
+For removal, call `edit.generativeRemove` with:
+
+```json
+{"consent":true}
+```
+
+Or specify the object and optionally override the model:
+
+```json
+{"prompt":"The cable and its shadow","model":"gpt-image-2.5-sunburst","consent":true}
+```
+
+Removal accepts an optional `prompt` of up to 31,000 characters. The engine combines it with
+provider-independent removal/background-reconstruction instructions and sets the wire operation
+to `remove`. Fill keeps the operation `fill` and requires a non-empty prompt. This does not add
+automatic object detection or a brush tool; existing selection tools define the editable region.
+
 The dialog uses the normal `ui.menu.invoke`, `ui.dialog.set` and `ui.dialog.confirm` control
 methods; its prompt and upload consent are visible state. The model preference is
-`integrations.imageModel`, accessible through `prefs.get` / `prefs.set`. Generative Fill uses that
-default when its engine command omits `model`; an explicit command model overrides it for one
+`integrations.imageModel`, accessible through `prefs.get` / `prefs.set`. Both operations use that
+default when their engine command omits `model`; an explicit command model overrides it for one
 request. Settings Apply/OK validates both the preference draft and any replacement provider before
 installing them. Cancel discards un-applied model changes and transient key input; existing connected
 providers remain active. Invalid settings keep the draft open for correction. Automation obtains credentials
@@ -58,7 +80,9 @@ request, potentially with a new charge; generation is not deterministic. No auto
 `Backend::generate(Request, cancellation)` operates on transport data only. Requests contain
 `version`, `operation`, `prompt`, `model`, `source` and `mask`. Each image is a bounded base64 PNG
 with explicit dimensions. Source/result pixels use sRGB. Mask alpha is zero where edits are requested
-and opaque where content should remain. Responses contain `version` and `image`.
+and opaque where content should remain. Operations are `fill` and `remove`; the prompt contains
+the complete editing instructions. Responses contain `version` and `image`. A backend that does
+not implement a requested operation must return an unsupported-operation error.
 
 To extract a separate module:
 
@@ -100,9 +124,9 @@ if a dependency or quality problem exceeds that scope.
 
 | Milestone | Scope | Estimate |
 |---|---|---|
-| 1 (this change) | Embedded boundary, OpenAI backend, integrated Generative Fill, failure/undo tests | 4–5 h |
-| 2 | Real API acceptance with a deliberately chosen non-personal image; provider dimensions, cancellation and result-quality review | 1–3 h |
-| 3 | Generative Remove using the existing selection/request/result path | 2–3 h |
+| 1 (implemented) | Embedded boundary, OpenAI backend, integrated Generative Fill, failure/undo tests | 4–5 h |
+| 2 (open) | Real API acceptance with a deliberately chosen non-personal image; provider dimensions, cancellation and result-quality review | 1–3 h |
+| 3 (implemented) | Generative Remove using the shared selection/request/result path; optional object description and dedicated wire operation | 2–3 h |
 | 4 | Generative Expand: requested canvas geometry and atomic canvas/layer undo | 3–5 h |
 | 5a | Background workflow: assess existing subject selection and define background mask | 2–3 h |
 | 5b | Generate/replace background through that mask | 2–4 h |
@@ -119,7 +143,9 @@ if a dependency or quality problem exceeds that scope.
 Provider quality/capability experiments are gates, not promises that every operation can preserve
 the real geometry or details of a photographed product. Preview/variant management, cropped
 large-image processing, persisted secure credentials and independent backend installation remain
-open; none is claimed by milestone 1.
+open. Fill and Remove have synthetic workflow and local HTTP checks; live API acceptance and
+removal quality on cables, people and complex backgrounds are still open. A mock reconstruction
+proves application, masking and undo, not the quality of a remote model’s reconstruction.
 
 Official API references checked for this implementation:
 [Image generation](https://developers.openai.com/api/docs/guides/image-generation) and

@@ -39,6 +39,7 @@ pub const TRANSFORM_MENU: &[Row] = &[
 /// their menu-bar twins.
 pub const SELECTION_MENU: &[Row] = &[
     Some(("Generative Fill…", "edit.generativeFill")),
+    Some(("Generative Remove…", "edit.generativeRemove")),
     None,
     Some(("Deselect", "select.deselect")),
     Some(("Select Inverse", "select.inverse")),
@@ -427,6 +428,7 @@ mod tests {
             labels(SELECTION_MENU),
             vec![
                 Some("Generative Fill…"),
+                Some("Generative Remove…"),
                 None,
                 Some("Deselect"),
                 Some("Select Inverse"),

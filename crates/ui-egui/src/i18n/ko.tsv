@@ -2868,3 +2868,7 @@ fontWeight	Italic	기울임
 	API charges may apply. The result becomes a new layer within your selection.	API 요금이 발생할 수 있습니다. 결과는 선택 영역 안에 새 레이어로 추가됩니다.
 	Images up to 2048 × 2048. Cancellation discards results; remote charges may still apply.	최대 2048 × 2048 이미지. 취소하면 결과가 폐기되지만 제공자의 요금은 발생할 수 있습니다.
 	Configure an image provider in AI Integrations.	AI 통합에서 이미지 제공자를 설정하세요.
+	Generative Remove…	생성형 제거…
+	Generative Remove	생성형 제거
+	Objects to remove (optional)	제거할 개체 (선택 사항)
+	Select the object with a small margin of background. The background will be reconstructed.	개체 주변 배경을 조금 포함하여 선택하세요. 배경이 재구성됩니다.

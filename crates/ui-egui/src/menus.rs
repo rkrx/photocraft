@@ -363,7 +363,9 @@ pub(crate) fn invoke_unguarded(app: &mut PhotocraftApp, ctx: &egui::Context, id:
         // Select › Color Range… from the menu: the dialog (with params: the engine directly).
         "select.colorRange" if params.as_object().is_none_or(|o| o.is_empty()) => Ok(json!({"dialog": crate::color_range_ui::open(app)})),
         // Edit › Fill… from the menu or its shortcuts: the Fill dialog (with params: the engine).
-        photocraft_engine::generative_cmds::FILL if params.as_object().is_none_or(|o| o.is_empty()) => Ok(json!({"dialog": crate::generative_ui::open(app)?})),
+        photocraft_engine::generative_cmds::FILL | photocraft_engine::generative_cmds::REMOVE if params.as_object().is_none_or(|o| o.is_empty()) => {
+            Ok(json!({"dialog": crate::generative_ui::open(app, id)?}))
+        }
         crate::fill_ui::COMMAND if params.as_object().is_none_or(|o| o.is_empty()) => {
             if let Some(Err(why)) = photocraft_engine::commands::find(id).map(|c| (c.enabled)(&app.session)) {
                 return Err(why);

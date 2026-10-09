@@ -2359,3 +2359,7 @@ fontWeight	Italic	Corsivo
 	Images up to 2048 × 2048. Cancellation discards results; remote charges may still apply.	Immagini fino a 2048 × 2048. Annullare scarta il risultato; il fornitore potrebbe comunque addebitare costi.
 	Configure an image provider in AI Integrations.	Configura un fornitore immagini nelle integrazioni IA.
 	AI Integrations	Integrazioni IA
+	Generative Remove…	Rimozione generativa…
+	Generative Remove	Rimozione generativa
+	Objects to remove (optional)	Oggetti da rimuovere (facoltativo)
+	Select the object with a small margin of background. The background will be reconstructed.	Seleziona l’oggetto includendo un piccolo margine di sfondo. Lo sfondo verrà ricostruito.

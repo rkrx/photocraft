@@ -11,6 +11,9 @@ use serde_json::{Value, json};
 use std::sync::Arc;
 
 pub const FILL: &str = "edit.generativeFill";
+pub const REMOVE: &str = "edit.generativeRemove";
+const REMOVE_PROMPT: &str = "Remove the unwanted objects inside the editable selection. Reconstruct the background that would naturally exist behind them, using the surrounding image as context. Match its texture, lighting, perspective and continuity. Do not replace the removed objects with new objects or leave transparent holes. Preserve the image outside the selection.";
+const MAX_REMOVE_DETAIL: usize = 31_000;
 
 fn error(e: impl std::fmt::Display) -> EngineError {
     EngineError::Other(e.to_string())
@@ -19,13 +22,13 @@ fn enabled(s: &Session) -> std::result::Result<(), String> {
     let d = s.active().ok_or("no document open")?;
     photocraft_ai::dimensions(d.doc.size.width, d.doc.size.height).map_err(|e| e.to_string())?;
     if d.doc.selection.as_ref().is_none_or(|mask| mask.content_bounds().intersect(&d.doc.bounds()).is_empty()) {
-        return Err("make a selection before Generative Fill".into());
+        return Err("make a selection before generative editing".into());
     }
     if !matches!(
         d.doc.mode,
         photocraft_color::ColorMode::Rgb | photocraft_color::ColorMode::Grayscale | photocraft_color::ColorMode::Cmyk | photocraft_color::ColorMode::Lab
     ) {
-        return Err("convert to RGB, Gray, CMYK or Lab before Generative Fill".into());
+        return Err("convert to RGB, Gray, CMYK or Lab before generative editing".into());
     }
     Ok(())
 }
@@ -39,7 +42,17 @@ pub fn specs() -> Vec<CommandSpec> {
             shortcut: None,
             params: r#"{"prompt":str,"model":str=integrations.imageModel,"consent":true} Sends the visible canvas and selection mask to the configured provider; creates one masked layer. Max 2048×2048."#,
             enabled,
-            run: fill,
+            run: |s, p| edit(s, p, Operation::Fill),
+            journal: true,
+        },
+        CommandSpec {
+            id: REMOVE,
+            label: "Generative Remove…",
+            menu: &["Edit"],
+            shortcut: None,
+            params: r#"{"prompt":str="","model":str=integrations.imageModel,"consent":true} Optional object description up to 31000 characters. Removes selected objects and reconstructs the background. Sends the visible canvas and selection mask; creates one masked layer. Max 2048×2048."#,
+            enabled,
+            run: |s, p| edit(s, p, Operation::Remove),
             journal: true,
         },
         CommandSpec {
@@ -52,22 +65,38 @@ pub fn specs() -> Vec<CommandSpec> {
             journal: false,
             run: |s, _| {
                 Ok(
-                    json!({"configured": s.generative_backend.is_some(), "backend": s.generative_backend.as_ref().map(|b| b.id()), "protocol": VERSION, "operations": ["fill"], "maxEdge": MAX_EDGE}),
+                    json!({"configured": s.generative_backend.is_some(), "backend": s.generative_backend.as_ref().map(|b| b.id()), "protocol": VERSION, "operations": ["fill", "remove"], "maxEdge": MAX_EDGE}),
                 )
             },
         },
     ]
 }
 
-fn fill(s: &mut Session, p: &Value) -> Result<Value> {
+fn edit(s: &mut Session, p: &Value, operation: Operation) -> Result<Value> {
     // Reject unknown fields, including credentials, before any upload or history edit.
     if p.as_object().is_none_or(|fields| fields.keys().any(|key| !matches!(key.as_str(), "prompt" | "model" | "consent"))) {
-        return Err(error("Generative Fill accepts only prompt, model and consent; configure credentials through the host"));
+        return Err(error("generative editing accepts only prompt, model and consent; configure credentials through the host"));
     }
-    let prompt = p.get("prompt").and_then(Value::as_str).ok_or_else(|| error("prompt must be text"))?.to_string();
-    if prompt.trim().is_empty() || prompt.chars().count() > 32_000 {
-        return Err(error("prompt must contain 1–32000 characters"));
-    }
+    let detail = match p.get("prompt") {
+        None if operation == Operation::Remove => "",
+        Some(Value::String(text)) => text.as_str(),
+        _ => return Err(error("prompt must be text")),
+    };
+    let (label, prompt) = match operation {
+        Operation::Fill => {
+            if detail.trim().is_empty() || detail.chars().count() > 32_000 {
+                return Err(error("prompt must contain 1–32000 characters"));
+            }
+            ("Generative Fill", detail.to_string())
+        }
+        Operation::Remove => {
+            if detail.chars().count() > MAX_REMOVE_DETAIL {
+                return Err(error("removal description must not exceed 31000 characters"));
+            }
+            let prompt = if detail.trim().is_empty() { REMOVE_PROMPT.to_string() } else { format!("{REMOVE_PROMPT}\nObjects to remove: {}", detail.trim()) };
+            ("Generative Remove", prompt)
+        }
+    };
     let model = match p.get("model") {
         None => s.prefs().integrations.image_model.clone(),
         Some(Value::String(model)) => model.clone(),
@@ -82,9 +111,9 @@ fn fill(s: &mut Session, p: &Value) -> Result<Value> {
     let backend: Arc<dyn Backend> = s.generative_backend.clone().ok_or_else(|| error("configure an image-generation backend first"))?;
     crate::jobs::edit_job(
         s,
-        "Generative Fill",
+        label,
         move |doc, active, ctx| {
-            let request = prepare(doc, prompt, model, ctx)?;
+            let request = prepare(doc, operation, prompt, model, ctx)?;
             ctx.check()?;
             ctx.progress(0.2, "Generating image (cancelling discards the result; the provider may still charge)");
             let response = backend.generate(&request, &|| ctx.cancelled()).map_err(|e| match e {
@@ -95,11 +124,13 @@ fn fill(s: &mut Session, p: &Value) -> Result<Value> {
             ctx.progress(0.85, "Preparing generated layer");
             let surface = result_surface(doc, &response, ctx)?;
             ctx.check()?;
-            let id = doc.insert_above(*active, Layer::new("Generative Fill", LayerContent::Raster(surface)));
+            // The source is the full visible composite. Place its replacement above the root
+            // stack so upper layers or a hidden/adjusted active group cannot obscure it.
+            let id = doc.insert_above(None, Layer::new(label, LayerContent::Raster(surface)));
             *active = Some(id);
             Ok(id.0)
         },
-        |layer| json!({"layer": layer, "operation": "fill"}),
+        move |layer| json!({"layer": layer, "operation": operation}),
     )
 }
 
@@ -109,7 +140,7 @@ fn encode(width: u32, height: u32, pixels: Vec<u8>) -> Result<PngImage> {
     PngImage::from_bytes(width, height, &png).map_err(error)
 }
 
-fn prepare(doc: &Document, prompt: String, model: String, ctx: &JobCtx) -> Result<Request> {
+fn prepare(doc: &Document, operation: Operation, prompt: String, model: String, ctx: &JobCtx) -> Result<Request> {
     let (width, height) = (doc.size.width, doc.size.height);
     photocraft_ai::dimensions(width, height).map_err(error)?;
     let selection = doc.selection.as_ref().ok_or_else(|| error("no selection"))?;
@@ -134,7 +165,7 @@ fn prepare(doc: &Document, prompt: String, model: String, ctx: &JobCtx) -> Resul
             mask.extend_from_slice(&[255, 255, 255, alpha]);
         }
     }
-    let request = Request { version: VERSION, operation: Operation::Fill, prompt, model, source, mask: encode(width, height, mask)? };
+    let request = Request { version: VERSION, operation, prompt, model, source, mask: encode(width, height, mask)? };
     request.validate().map_err(error)?;
     Ok(request)
 }

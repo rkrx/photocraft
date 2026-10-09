@@ -247,7 +247,7 @@ pub fn show(app: &mut PhotocraftApp, ctx: &egui::Context) {
                         let ok_label = if d.kind == DialogKind::NewDocument {
                             tl!("Create")
                         } else if crate::generative_ui::owns(&d.fields) {
-                            tl!("Generate")
+                            crate::generative_ui::confirm_label(&d.fields)
                         } else if d.fields.contains_key("__export") {
                             tl!("Export")
                         } else {
@@ -440,8 +440,8 @@ pub fn confirm(app: &mut PhotocraftApp, id: u64) -> Result<Value, String> {
 /// schema dialog for filters, the Color Range dialog for `select.colorRange`, otherwise a bare
 /// confirm dialog.
 pub fn open_command_dialog(app: &mut PhotocraftApp, command: &str, label: &str) -> u64 {
-    if command == photocraft_engine::generative_cmds::FILL {
-        return crate::generative_ui::open(app).unwrap_or_else(|message| {
+    if matches!(command, photocraft_engine::generative_cmds::FILL | photocraft_engine::generative_cmds::REMOVE) {
+        return crate::generative_ui::open(app, command).unwrap_or_else(|message| {
             let mut fields = serde_json::Map::new();
             fields.insert("message".into(), Value::String(message));
             app.ui.open_dialog(DialogKind::Error, fields)

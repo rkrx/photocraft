@@ -2711,3 +2711,7 @@ fontWeight	Italic	Italique
 	Images up to 2048 × 2048. Cancellation discards results; remote charges may still apply.	Images jusqu’à 2048 × 2048. L’annulation supprime le résultat ; le fournisseur peut encore facturer.
 	Configure an image provider in AI Integrations.	Configurez un fournisseur d’images dans les intégrations IA.
 	AI Integrations	Intégrations d'IA
+	Generative Remove…	Suppression générative…
+	Generative Remove	Suppression générative
+	Objects to remove (optional)	Objets à supprimer (facultatif)
+	Select the object with a small margin of background. The background will be reconstructed.	Sélectionnez l’objet avec une petite marge de fond. Le fond sera reconstitué.

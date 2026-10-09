@@ -2698,3 +2698,7 @@ fontWeight	Italic	Miring
 	Images up to 2048 × 2048. Cancellation discards results; remote charges may still apply.	Gambar hingga 2048 × 2048. Pembatalan membuang hasil; penyedia masih dapat mengenakan biaya.
 	Configure an image provider in AI Integrations.	Atur penyedia gambar di Integrasi AI.
 	AI Integrations	Integrasi AI
+	Generative Remove…	Hapus generatif…
+	Generative Remove	Hapus generatif
+	Objects to remove (optional)	Objek yang akan dihapus (opsional)
+	Select the object with a small margin of background. The background will be reconstructed.	Pilih objek dengan sedikit area latar di sekitarnya. Latar akan direkonstruksi.

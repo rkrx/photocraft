@@ -2290,3 +2290,7 @@ fontWeight	Italic	Kurzíva
 	Images up to 2048 × 2048. Cancellation discards results; remote charges may still apply.	Obrázky do 2048 × 2048. Zrušení zahodí výsledek; poskytovatel může přesto účtovat poplatek.
 	Configure an image provider in AI Integrations.	Nastavte poskytovatele obrázků v Integracích AI.
 	AI Integrations	Integrace AI
+	Generative Remove…	Generativní odstranění…
+	Generative Remove	Generativní odstranění
+	Objects to remove (optional)	Objekty k odstranění (volitelné)
+	Select the object with a small margin of background. The background will be reconstructed.	Vyberte objekt s malým okrajem pozadí. Pozadí bude obnoveno.
