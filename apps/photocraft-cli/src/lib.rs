@@ -273,6 +273,7 @@ fn command_list(a: &Args) -> Result<Vec<(String, Value)>, String> {
 fn run_cmds(a: &Args, out: &mut dyn Write, err: &mut dyn Write) -> R {
     let opts = export_opts(a)?;
     let mut h = Headless::trusted_local();
+    h.session.generative_backend = photocraft_ai_openai::from_env().map_err(|e| e.to_string())?;
     match (a.positional.as_slice(), a.get("--new")) {
         ([file], None) => {
             let o = h.open(Path::new(file)).map_err(|e| e.to_string())?;
@@ -378,6 +379,7 @@ fn batch(a: &Args, out: &mut dyn Write, err: &mut dyn Write) -> R {
         let r = (|| -> Result<Vec<String>, String> {
             written.check(&target_text)?;
             let mut h = Headless::trusted_local();
+            h.session.generative_backend = photocraft_ai_openai::from_env().map_err(|e| e.to_string())?;
             h.open(input).map_err(|e| e.to_string())?;
             for (id, p) in &actions {
                 h.command_run(id, p.clone()).map_err(|e| format!("`{id}`: {e}"))?;
@@ -448,7 +450,9 @@ fn commands(a: &Args, out: &mut dyn Write) -> R {
 
 fn serve(a: &Args, err: &mut dyn Write) -> R {
     use std::sync::{Arc, Mutex};
-    let h = Arc::new(Mutex::new(Headless::with_workspace(automation_workspace(a)?)));
+    let mut headless = Headless::with_workspace(automation_workspace(a)?);
+    headless.session.generative_backend = photocraft_ai_openai::from_env().map_err(|e| e.to_string())?;
+    let h = Arc::new(Mutex::new(headless));
     match a.get("--port") {
         Some(port) => {
             let port: u16 = port.parse().map_err(|_| format!("bad --port `{port}`"))?;
@@ -479,7 +483,11 @@ fn mcp(a: &Args) -> R {
             let token = security::client_token(supplied.as_deref(), token_file.as_deref()).map_err(|e| e.to_string())?;
             PhotocraftMcp::bridge(addr, &token).map_err(|e| e.to_string())?
         }
-        None => PhotocraftMcp::headless_with_workspace(automation_workspace(a)?),
+        None => {
+            let mut headless = Headless::with_workspace(automation_workspace(a)?);
+            headless.session.generative_backend = photocraft_ai_openai::from_env().map_err(|e| e.to_string())?;
+            PhotocraftMcp::with_backend(photocraft_automation::Backend::Headless(std::sync::Arc::new(std::sync::Mutex::new(headless))))
+        }
     };
     let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build().map_err(|e| e.to_string())?;
     rt.block_on(server.serve_stdio()).map_err(|e| e.to_string())

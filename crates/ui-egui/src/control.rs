@@ -591,7 +591,12 @@ fn dispatch(app: &mut PhotocraftApp, ctx: &egui::Context, req: &ControlRequest) 
             None => err("missing `dialog`"),
         },
         "ui.dialog.cancel" => match u("dialog").and_then(|id| app.ui.close_dialog(id)) {
-            Some(_) => ok(Value::Null),
+            Some(d) => {
+                if crate::prefs_ui::is_preferences(&d.fields) {
+                    app.ui.generative_key.0.clear();
+                }
+                ok(Value::Null)
+            }
             None => err("no such dialog"),
         },
         "ui.window.open" => {

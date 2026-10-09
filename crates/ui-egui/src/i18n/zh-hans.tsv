@@ -2285,3 +2285,16 @@ fontWeight	Italic	斜体
 	Color to Alpha…	颜色转为 Alpha…
 	Transparency Threshold	透明度阈值
 	Opacity Threshold	不透明度阈值
+
+	Generative Fill…	生成式填充…
+	Generative Fill	生成式填充
+	Image provider: {provider}	图像提供商：{provider}
+	API key (session only)	API 密钥（仅限本次会话）
+	Leave empty to keep the connected backend.	留空以保留已连接的提供商。
+	No image provider installed. Use the desktop app or configure a backend.	未安装图像提供商。请使用桌面应用或配置提供商。
+	Describe what to change in the selection	描述选区中需要修改的内容
+	Send the visible image and selection mask to this provider	将可见图像和选区蒙版发送给此提供商
+	API charges may apply. The result becomes a new layer within your selection.	可能产生 API 费用。结果将作为选区内的新图层添加。
+	Images up to 2048 × 2048. Cancellation discards results; remote charges may still apply.	图像最大为 2048 × 2048。取消会丢弃结果，但提供商仍可能收费。
+	Configure an image provider in AI Integrations.	请在 AI 集成中配置图像提供商。
+	AI Integrations	AI 集成

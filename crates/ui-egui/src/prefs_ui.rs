@@ -680,7 +680,9 @@ fn preference_values(p: &prefs::Preferences) -> Map<String, Value> {
 
 /// Compare the editable sections, excluding settings managed outside Preferences.
 pub fn preferences_changed(app: &PhotocraftApp, fields: &Map<String, Value>) -> bool {
-    is_preferences(fields) && fields.get("values").and_then(Value::as_object).is_some_and(|values| *values != preference_values(app.session.prefs()))
+    is_preferences(fields)
+        && (!app.ui.generative_key.0.trim().is_empty()
+            || fields.get("values").and_then(Value::as_object).is_some_and(|values| *values != preference_values(app.session.prefs())))
 }
 
 /// Commit the working copy and keep the current section open. Failure leaves the draft intact.
@@ -690,7 +692,14 @@ pub fn apply(app: &mut PhotocraftApp, id: u64) -> Result<Value, String> {
         return Err("Apply is only available for Preferences".into());
     }
     let fields = d.fields.clone();
-    let result = confirm(app, &fields)?;
+    let result = match confirm(app, &fields) {
+        Ok(result) => result,
+        Err(error) => {
+            app.ui.status.clone_from(&error);
+            app.ui.status_error = true;
+            return Err(error);
+        }
+    };
     let values = Value::Object(preference_values(app.session.prefs()));
     if let Some(d) = app.ui.dialog_mut(id) {
         // Use the validated values as the next draft, including any normalisation by prefs.set.
@@ -782,7 +791,7 @@ pub fn body(app: &mut PhotocraftApp, ui: &mut egui::Ui, f: &mut Map<String, Valu
     match f.get("__prefsui").and_then(Value::as_str).unwrap_or("") {
         "prefs" => {
             f.insert("__gpuInfo".into(), json!(app.perf.gpu_info.lines()));
-            prefs_body(ui, f);
+            prefs_body(app, ui, f);
         }
         "shortcuts" => shortcuts_body(app, ui, f),
         "presets" => presets_body(app, ui, f),
@@ -793,6 +802,9 @@ pub fn body(app: &mut PhotocraftApp, ui: &mut egui::Ui, f: &mut Map<String, Valu
 }
 
 fn humanize(key: &str) -> String {
+    if key == "imageModel" {
+        return "Model".into();
+    }
     // These controls appear only for WebP, so reuse the existing translated labels.
     if key == "webpLossless" {
         return "Lossless".into();
@@ -856,7 +868,7 @@ fn color_of(s: &str) -> Color32 {
 }
 
 /// Preferences: section list on the left, the section's settings on the right.
-fn prefs_body(ui: &mut egui::Ui, f: &mut Map<String, Value>) {
+fn prefs_body(app: &mut PhotocraftApp, ui: &mut egui::Ui, f: &mut Map<String, Value>) {
     let t = Tokens::get(ui.ctx());
     let mut section = f.get("section").and_then(Value::as_str).unwrap_or("general").to_string();
     let mut values = f.get("values").cloned().unwrap_or(Value::Null);
@@ -875,7 +887,9 @@ fn prefs_body(ui: &mut egui::Ui, f: &mut Map<String, Value>) {
                 } else if resp.hovered() {
                     ui.painter().rect_filled(rect, t.radius_sm, t.hover);
                 }
-                let color = if sel {
+                let color = if sel && t.kind == ThemeKind::Classic {
+                    t.accent_text
+                } else if sel {
                     t.text
                 } else if empty {
                     t.text_faint
@@ -909,6 +923,9 @@ fn prefs_body(ui: &mut egui::Ui, f: &mut Map<String, Value>) {
                     ui.label(RichText::new(tl!("These settings aren't available in PhotoCraft yet.")).color(t.text_faint));
                 } else if let Some(obj) = values.get_mut(&section).and_then(Value::as_object_mut) {
                     section_fields(ui, &section, obj, &order, lang);
+                    if section == "integrations" {
+                        crate::generative_ui::settings_body(app, ui);
+                    }
                     if section == "performance" {
                         gpu_status_rows(ui, f.get("__gpuInfo"), obj);
                     }
@@ -1416,7 +1433,15 @@ pub fn confirm(app: &mut PhotocraftApp, f: &Map<String, Value>) -> Result<Value,
     match f.get("__prefsui").and_then(Value::as_str).unwrap_or("") {
         "prefs" => {
             let values = f.get("values").cloned().unwrap_or(Value::Null);
-            app.run("prefs.set", json!({"path": "", "value": values}))
+            // Construct the provider first, but install it only after preferences validate.
+            // The transient key never enters the command parameters or settings JSON.
+            let backend = crate::generative_ui::settings_backend(app)?;
+            let result = app.run("prefs.set", json!({"path": "", "value": values}))?;
+            if let Some(backend) = backend {
+                app.session.generative_backend = Some(backend);
+            }
+            app.ui.generative_key.0.clear();
+            Ok(result)
         }
         "shortcuts" => {
             let overrides = f.get("overrides").cloned().unwrap_or(json!({}));
@@ -1848,9 +1873,10 @@ mod tests {
         assert!(has_visible_fields(&values, "general"));
         assert!(has_visible_fields(&values, "fileHandling"));
         // Every setting of these sections is still unimplemented.
-        for section in ["type", "integrations", "scratchDisks"] {
+        for section in ["type", "scratchDisks"] {
             assert!(!has_visible_fields(&values, section), "{section}");
         }
+        assert!(has_visible_fields(&values, "integrations"));
         // Rotate View with Trackpad is live; the other Enhanced Controls rows stay hidden.
         assert!(has_visible_fields(&values, "enhancedControls"));
         assert!(!prefs::is_hidden("enhancedControls.rotateViewWithTrackpad"));

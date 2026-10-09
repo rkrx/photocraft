@@ -36,6 +36,10 @@ photocraft-ui-egui = { path = "crates/ui-egui" }
 photocraft-testkit = { path = "crates/testkit" }
 photocraft-tablet = { path = "crates/tablet" }
 
+# The AI contract is transport-ready; provider dependencies stay out of the engine.
+photocraft-ai = { path = "crates/ai" }
+photocraft-ai-openai = { path = "crates/ai-openai" }
+
 # external
 thiserror = "2"
 serde = { version = "1", features = ["derive", "rc"] }

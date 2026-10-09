@@ -794,8 +794,19 @@ pub struct ColorPanelState {
     pub background: bool,
 }
 
+/// Secret input: excluded from serialization and redacted in debug output.
+#[derive(Clone, Default, PartialEq)]
+pub struct GenerativeKey(pub String);
+impl std::fmt::Debug for GenerativeKey {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("GenerativeKey([redacted])")
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct UiState {
+    #[serde(skip)]
+    pub generative_key: GenerativeKey,
     pub tool: Tool,
     /// Recently opened file paths, most-recent first (File › Open Recent). Capped; de-duplicated.
     #[serde(default)]
@@ -964,6 +975,7 @@ impl Default for UiState {
     fn default() -> Self {
         Self {
             tool: Tool::Brush,
+            generative_key: Default::default(),
             recent_files: Vec::new(),
             text_edit: None,
             type_transform: None,

@@ -89,6 +89,8 @@ pub fn show(app: &mut PhotocraftApp, ctx: &egui::Context) {
         let mut fields = d.fields.clone();
         let mut outcome: Option<bool> = None; // Some(true)=OK, Some(false)=Cancel
         let mut apply_requested = false;
+        let mut enter_requested = false;
+        let mut generative_prompt_focused = false;
         let title = display_title(&d);
         let id = egui::Id::new(("dialog", d.id));
         // Opens where the same dialog was last left (centred the first time), then its top-left
@@ -193,6 +195,9 @@ pub fn show(app: &mut PhotocraftApp, ctx: &egui::Context) {
                         }
                     }
                 }
+                DialogKind::Command if crate::generative_ui::owns(&fields) => {
+                    generative_prompt_focused = crate::generative_ui::body(app, ui, &mut fields);
+                }
                 DialogKind::Command if crate::fill_ui::owns(&fields) => crate::fill_ui::body(app, ui, &mut fields),
                 DialogKind::Command if crate::stroke_ui::owns(&fields) => crate::stroke_ui::body(ui, &mut fields),
                 DialogKind::Command if crate::rasterize_prompt::owns(&fields) => crate::rasterize_prompt::body(ui, &fields),
@@ -226,7 +231,7 @@ pub fn show(app: &mut PhotocraftApp, ctx: &egui::Context) {
             }
             if crate::color_picker_ui::owns(&fields) {
                 if outcome.is_none() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
-                    outcome = Some(true);
+                    enter_requested = true;
                 }
             } else {
                 ui.add_space(8.0);
@@ -241,12 +246,15 @@ pub fn show(app: &mut PhotocraftApp, ctx: &egui::Context) {
                     } else {
                         let ok_label = if d.kind == DialogKind::NewDocument {
                             tl!("Create")
+                        } else if crate::generative_ui::owns(&d.fields) {
+                            tl!("Generate")
                         } else if d.fields.contains_key("__export") {
                             tl!("Export")
                         } else {
                             crate::file_ui::ok_label(&d.fields).unwrap_or(tl!("OK"))
                         };
-                        let ok = DialogButton::new(ButtonRole::Default, ok_label, 84.0);
+                        let can_confirm = !crate::generative_ui::owns(&fields) || crate::generative_ui::can_confirm(app, &fields);
+                        let ok = DialogButton::new(ButtonRole::Default, ok_label, 84.0).enabled(can_confirm);
                         // Photoshop: holding Alt turns Cancel into Reset (the dialog stays open).
                         let reset = ui.input(|i| i.modifiers.alt) && crate::adjust_dialog::resets(&fields);
                         let cancel_label = if reset {
@@ -268,7 +276,7 @@ pub fn show(app: &mut PhotocraftApp, ctx: &egui::Context) {
                             Some(ButtonRole::Cancel) => outcome = Some(false),
                             Some(ButtonRole::Apply) => apply_requested = true,
                             Some(_) => outcome = Some(true),
-                            None if ui.input(|i| i.key_pressed(egui::Key::Enter)) => outcome = Some(true),
+                            None if can_confirm && !generative_prompt_focused && ui.input(|i| i.key_pressed(egui::Key::Enter)) => enter_requested = true,
                             None => {}
                         }
                     }
@@ -277,6 +285,11 @@ pub fn show(app: &mut PhotocraftApp, ctx: &egui::Context) {
             // The frame around the content (Frame::popup's margin and stroke).
             ui.min_rect().expand(ui.spacing().menu_margin.sum().max_elem() + 2.0)
         });
+        // Enter applies to the foreground modal only. Settings opened over a generative
+        // dialog must never also start the underlying image request.
+        if outcome.is_none() && enter_requested && modal.is_top_modal && !modal.any_popup_open {
+            outcome = Some(true);
+        }
         // The picker has a larger frame margin; include that whole frame in the canvas hit guard.
         shown.push(if color_picker { modal.response.rect } else { modal.inner });
         // Pin once laid out at its real size (the first frame is an invisible sizing pass).
@@ -310,6 +323,9 @@ pub fn show(app: &mut PhotocraftApp, ctx: &egui::Context) {
                 let _ = confirm(app, d.id);
             }
             Some(false) => {
+                if crate::prefs_ui::is_preferences(&d.fields) {
+                    app.ui.generative_key.0.clear();
+                }
                 app.ui.close_dialog(d.id);
                 app.filter_preview = None;
                 app.color_range = None;
@@ -356,6 +372,21 @@ pub fn title(d: &Dialog) -> String {
 
 /// Confirm a dialog: run its action and close it. Used by the OK button and by automation.
 pub fn confirm(app: &mut PhotocraftApp, id: u64) -> Result<Value, String> {
+    // Settings errors preserve the draft, including transient secret input, for correction.
+    if let Some(d) = app.ui.dialogs.iter().find(|d| d.id == id)
+        && d.kind == DialogKind::Command
+        && crate::prefs_ui::is_preferences(&d.fields)
+    {
+        let fields = d.fields.clone();
+        let result = crate::prefs_ui::confirm(app, &fields);
+        if let Err(error) = &result {
+            app.ui.status.clone_from(error);
+            app.ui.status_error = true;
+        } else {
+            app.ui.close_dialog(id);
+        }
+        return result;
+    }
     let d = app.ui.close_dialog(id).ok_or_else(|| format!("no dialog {id}"))?;
     match d.kind {
         DialogKind::NewDocument => {
@@ -368,6 +399,7 @@ pub fn confirm(app: &mut PhotocraftApp, id: u64) -> Result<Value, String> {
             }
             r
         }
+        DialogKind::Command if crate::generative_ui::owns(&d.fields) => crate::generative_ui::confirm(app, &d.fields),
         DialogKind::Command if crate::fill_ui::owns(&d.fields) => crate::fill_ui::confirm(app, &d.fields),
         DialogKind::Command if crate::stroke_ui::owns(&d.fields) => crate::stroke_ui::confirm(app, &d.fields),
         DialogKind::Command if crate::rasterize_prompt::owns(&d.fields) => crate::rasterize_prompt::confirm(app, &d.fields),
@@ -408,6 +440,13 @@ pub fn confirm(app: &mut PhotocraftApp, id: u64) -> Result<Value, String> {
 /// schema dialog for filters, the Color Range dialog for `select.colorRange`, otherwise a bare
 /// confirm dialog.
 pub fn open_command_dialog(app: &mut PhotocraftApp, command: &str, label: &str) -> u64 {
+    if command == photocraft_engine::generative_cmds::FILL {
+        return crate::generative_ui::open(app).unwrap_or_else(|message| {
+            let mut fields = serde_json::Map::new();
+            fields.insert("message".into(), Value::String(message));
+            app.ui.open_dialog(DialogKind::Error, fields)
+        });
+    }
     if command == crate::stroke_ui::COMMAND {
         return crate::stroke_ui::open(app);
     }

@@ -65,6 +65,7 @@ pub mod filter_dialog;
 #[cfg(not(target_arch = "wasm32"))]
 mod filter_preview_worker;
 pub mod gallery_ui;
+pub mod generative_ui;
 pub mod gpu_canvas;
 pub mod gpu_status;
 pub mod gradient_ui;
@@ -247,10 +248,14 @@ pub type QuitFn = Box<dyn FnMut()>;
 /// Where the OS pointer is now, in egui points within the window; `None` when unknown.
 pub type CursorPosFn = Box<dyn FnMut(&egui::Context) -> Option<egui::Pos2>>;
 
+pub type GenerativeBackendFactory = Box<dyn Fn(&str) -> Result<std::sync::Arc<dyn photocraft_ai::Backend>, String>>;
+
 /// Platform services injected by the app binary (file dialogs, codecs), keeping this crate free of
 /// I/O dependencies.
 #[derive(Default)]
 pub struct Services {
+    /// Runtime credential bootstrap. Provider logic lives in a separate Rust crate.
+    pub generative_backend: Option<GenerativeBackendFactory>,
     /// User-initiated desktop/browser pixel sampling.
     pub screen_pick: Option<screen_picker::Service>,
     /// Decode a file's bytes into a document (PSD, PNG, JPEG, …).

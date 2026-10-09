@@ -23,6 +23,25 @@ fn defaults_match_photoshop() {
 }
 
 #[test]
+fn image_model_preferences_validate_persist_and_load_legacy_settings() {
+    let mut s = Session::new();
+    s.load_prefs_json(r#"{"integrations":{"allowAgentControl":true,"controlPort":0}}"#).unwrap();
+    assert_eq!(s.prefs().integrations.image_model, photocraft_ai::DEFAULT_MODEL);
+    s.execute("prefs.set", json!({"path": "integrations.imageModel", "value": "custom-model.2"})).unwrap();
+    for invalid in [json!(""), json!("bad model"), json!("a".repeat(129)), json!(7)] {
+        assert!(s.execute("prefs.set", json!({"path": "integrations.imageModel", "value": invalid})).is_err());
+        assert_eq!(s.prefs().integrations.image_model, "custom-model.2");
+    }
+    let mut restored = Session::new();
+    restored.load_prefs_json(&s.prefs_to_json()).unwrap();
+    assert_eq!(restored.prefs().integrations.image_model, "custom-model.2");
+    assert!(s.execute("prefs.set", json!({"path": "integrations.apiKey", "value": "secret"})).is_err());
+    assert!(!s.prefs_to_json().contains("secret"));
+    s.execute("prefs.reset", json!({"section": "integrations"})).unwrap();
+    assert_eq!(s.prefs().integrations.image_model, photocraft_ai::DEFAULT_MODEL);
+}
+
+#[test]
 fn get_set_reset_by_path() {
     let mut s = session();
     assert_eq!(s.execute("prefs.get", json!({"path": "performance.historyStates"})).unwrap(), json!(50));

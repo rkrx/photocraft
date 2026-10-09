@@ -3385,3 +3385,15 @@ cameraRaw	Masking	Маскування
 	Dual Axis	Подвійна вісь
 	Diagonal	Діагональна
 	Transform Symmetry	Трансформувати симетрію
+
+	Generative Fill…	Генеративне заповнення…
+	Generative Fill	Генеративне заповнення
+	Image provider: {provider}	Постачальник зображень: {provider}
+	API key (session only)	Ключ API (лише для цього сеансу)
+	Leave empty to keep the connected backend.	Залиште порожнім, щоб зберегти підключеного постачальника.
+	No image provider installed. Use the desktop app or configure a backend.	Постачальник зображень не встановлений. Використайте настільну програму або налаштуйте постачальника.
+	Describe what to change in the selection	Опишіть зміну у виділеній області
+	Send the visible image and selection mask to this provider	Надіслати видиме зображення та маску виділення цьому постачальнику
+	API charges may apply. The result becomes a new layer within your selection.	Можливі витрати на API. Результат додається новим шаром усередині виділення.
+	Images up to 2048 × 2048. Cancellation discards results; remote charges may still apply.	Зображення до 2048 × 2048. Скасування відкидає результат; постачальник усе одно може стягнути плату.
+	Configure an image provider in AI Integrations.	Налаштуйте постачальника зображень в інтеграціях ШІ.

@@ -484,3 +484,13 @@ stroke is drawn above its clipped layers; linked effect patterns tile from the l
 reference point; stroke distances follow a 5 × 5 chamfer metric (1, √2, √5) seeded at sub-pixel
 edge offsets; interior effects keep the layer's alpha; outside strokes blend onto the backdrop with
 their own modes, an upper stroke covering lower ones.
+
+## Generative AI in this fork
+
+See [generative-ai.md](generative-ai.md) for the integrated Generative Fill workflow, provider
+boundary, session-only keys, explicit upload consent and limits. `OPENAI_API_KEY` configures the
+desktop and CLI/MCP hosts without placing credentials in commands.
+
+To inspect the dialog offscreen without an API request, pass `--generative-preview` to the
+`snapshot` example, create a synthetic document and selection, and invoke `edit.generativeFill`.
+The preview factory never connects to a provider.

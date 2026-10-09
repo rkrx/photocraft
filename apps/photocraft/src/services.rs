@@ -257,6 +257,9 @@ pub fn native(automation: Option<photocraft_automation::AuthorizedWorkspace>) ->
         }) as photocraft_ui_egui::AutomationCommandFn
     });
     Services {
+        generative_backend: Some(Box::new(|key| {
+            photocraft_ai_openai::OpenAi::new(key).map(|backend| Arc::new(backend) as Arc<dyn photocraft_ai::Backend>).map_err(|e| e.to_string())
+        })),
         import: Some(Box::new(|name: &str, bytes: &[u8]| {
             crate::crash_guard::guard("Open", || photocraft_io::import(name, bytes).map(|r| (r.document, r.warnings)).map_err(|e| e.to_string()))
         })),

@@ -42,6 +42,7 @@ mod frame_cmds;
 pub mod fx_view_cmds;
 pub mod fx_visibility_cmds;
 pub mod gallery_cmds;
+pub mod generative_cmds;
 pub mod gradient_fill_cmds;
 pub mod group_view_cmds;
 pub mod hidden_target;
@@ -273,6 +274,8 @@ impl Default for ToolState {
 
 #[derive(Default)]
 pub struct Session {
+    /// Runtime-only provider, injected by the host; never stored in documents or journals.
+    pub generative_backend: Option<Arc<dyn photocraft_ai::Backend>>,
     docs: Vec<DocState>,
     active: Option<usize>,
     pub tools: ToolState,

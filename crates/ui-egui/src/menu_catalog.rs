@@ -94,6 +94,7 @@ pub static CATALOG: &[(&[&str], &str, Option<&str>, &str)] = &[
     (&["Edit"], "---", None, "---"),
     (&["Edit"], "Fill…", Some("Shift+F5"), "edit.fill"),
     (&["Edit"], "Stroke…", None, "edit.stroke"),
+    (&["Edit"], "Generative Fill…", None, "edit.generativeFill"),
     (&["Edit"], "Content-Aware Fill…", None, "edit.contentAwareFill"),
     (&["Edit"], "---", None, "---"),
     (&["Edit"], "Content-Aware Scale", Some("Cmd+Alt+Shift+C"), "edit.contentAwareScale"),

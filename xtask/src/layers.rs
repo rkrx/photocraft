@@ -33,6 +33,8 @@ impl Class {
 /// The layering table. Names are package names without the `photocraft-`
 /// prefix.
 pub const TABLE: &[(&str, Class)] = &[
+    ("ai", Class::Layer(0)),
+    ("ai-openai", Class::Layer(4)),
     ("geom", Class::Layer(0)),
     ("cms", Class::Layer(0)),
     ("color", Class::Layer(0)),

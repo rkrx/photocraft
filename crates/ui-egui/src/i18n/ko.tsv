@@ -2856,3 +2856,15 @@ fontWeight	Italic	기울임
 	Color to Alpha…	색상을 알파로…
 	Transparency Threshold	투명도 한계값
 	Opacity Threshold	불투명도 한계값
+
+	Generative Fill…	생성형 채우기…
+	Generative Fill	생성형 채우기
+	Image provider: {provider}	이미지 제공자: {provider}
+	API key (session only)	API 키 (현재 세션만)
+	Leave empty to keep the connected backend.	연결된 제공자를 유지하려면 비워 두세요.
+	No image provider installed. Use the desktop app or configure a backend.	이미지 제공자가 없습니다. 데스크톱 앱을 사용하거나 제공자를 설정하세요.
+	Describe what to change in the selection	선택 영역에서 변경할 내용을 설명하세요
+	Send the visible image and selection mask to this provider	표시된 이미지와 선택 마스크를 이 제공자에게 전송
+	API charges may apply. The result becomes a new layer within your selection.	API 요금이 발생할 수 있습니다. 결과는 선택 영역 안에 새 레이어로 추가됩니다.
+	Images up to 2048 × 2048. Cancellation discards results; remote charges may still apply.	최대 2048 × 2048 이미지. 취소하면 결과가 폐기되지만 제공자의 요금은 발생할 수 있습니다.
+	Configure an image provider in AI Integrations.	AI 통합에서 이미지 제공자를 설정하세요.

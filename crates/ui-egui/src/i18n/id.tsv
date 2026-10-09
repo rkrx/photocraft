@@ -2685,3 +2685,16 @@ fontWeight	Italic	Miring
 	Color to Alpha…	Warna ke Alpha…
 	Transparency Threshold	Ambang transparansi
 	Opacity Threshold	Ambang opasitas
+
+	Generative Fill…	Isi generatif…
+	Generative Fill	Isi generatif
+	Image provider: {provider}	Penyedia gambar: {provider}
+	API key (session only)	Kunci API (hanya sesi ini)
+	Leave empty to keep the connected backend.	Biarkan kosong untuk mempertahankan penyedia yang terhubung.
+	No image provider installed. Use the desktop app or configure a backend.	Tidak ada penyedia gambar terpasang. Gunakan aplikasi desktop atau atur penyedia.
+	Describe what to change in the selection	Jelaskan perubahan pada seleksi
+	Send the visible image and selection mask to this provider	Kirim gambar yang terlihat dan masker seleksi ke penyedia ini
+	API charges may apply. The result becomes a new layer within your selection.	Biaya API mungkin berlaku. Hasil ditambahkan sebagai lapisan baru di dalam seleksi.
+	Images up to 2048 × 2048. Cancellation discards results; remote charges may still apply.	Gambar hingga 2048 × 2048. Pembatalan membuang hasil; penyedia masih dapat mengenakan biaya.
+	Configure an image provider in AI Integrations.	Atur penyedia gambar di Integrasi AI.
+	AI Integrations	Integrasi AI

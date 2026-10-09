@@ -3463,3 +3463,15 @@ cameraRaw	Whites	Witten
 	Dual Axis	Dubbele as
 	Diagonal	Diagonaal
 	Transform Symmetry	Symmetrie transformeren
+
+	Generative Fill…	Generatief vullen…
+	Generative Fill	Generatief vullen
+	Image provider: {provider}	Beeldaanbieder: {provider}
+	API key (session only)	API-sleutel (alleen deze sessie)
+	Leave empty to keep the connected backend.	Laat leeg om de verbonden aanbieder te behouden.
+	No image provider installed. Use the desktop app or configure a backend.	Geen beeldaanbieder geïnstalleerd. Gebruik de desktop-app of stel een aanbieder in.
+	Describe what to change in the selection	Beschrijf wat er in de selectie moet veranderen
+	Send the visible image and selection mask to this provider	Stuur de zichtbare afbeelding en het selectiemasker naar deze aanbieder
+	API charges may apply. The result becomes a new layer within your selection.	API-kosten kunnen gelden. Het resultaat wordt een nieuwe laag binnen de selectie.
+	Images up to 2048 × 2048. Cancellation discards results; remote charges may still apply.	Afbeeldingen tot 2048 × 2048. Annuleren verwijdert het resultaat; de aanbieder kan nog kosten rekenen.
+	Configure an image provider in AI Integrations.	Stel een beeldaanbieder in bij AI-integraties.

@@ -3302,3 +3302,15 @@ fontWeight	Italic	斜体
 	Color to Alpha…	カラーを透明に…
 	Transparency Threshold	透明のしきい値
 	Opacity Threshold	不透明度のしきい値
+
+	Generative Fill…	生成塗りつぶし…
+	Generative Fill	生成塗りつぶし
+	Image provider: {provider}	画像プロバイダー: {provider}
+	API key (session only)	APIキー（このセッションのみ）
+	Leave empty to keep the connected backend.	接続済みのプロバイダーを使い続ける場合は空欄にします。
+	No image provider installed. Use the desktop app or configure a backend.	画像プロバイダーがありません。デスクトップアプリを使用するか、プロバイダーを設定してください。
+	Describe what to change in the selection	選択範囲で変更したい内容を記述
+	Send the visible image and selection mask to this provider	表示中の画像と選択マスクをこのプロバイダーに送信
+	API charges may apply. The result becomes a new layer within your selection.	API料金が発生する場合があります。結果は選択範囲内の新しいレイヤーとして追加されます。
+	Images up to 2048 × 2048. Cancellation discards results; remote charges may still apply.	画像は2048 × 2048まで。キャンセルすると結果は破棄されますが、プロバイダーの料金は発生する場合があります。
+	Configure an image provider in AI Integrations.	AI連携で画像プロバイダーを設定してください。

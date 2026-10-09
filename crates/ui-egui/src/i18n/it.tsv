@@ -2346,3 +2346,16 @@ fontWeight	Italic	Corsivo
 	Color to Alpha…	Colore ad alfa…
 	Transparency Threshold	Soglia di trasparenza
 	Opacity Threshold	Soglia di opacità
+
+	Generative Fill…	Riempimento generativo…
+	Generative Fill	Riempimento generativo
+	Image provider: {provider}	Fornitore immagini: {provider}
+	API key (session only)	Chiave API (solo per questa sessione)
+	Leave empty to keep the connected backend.	Lascia vuoto per mantenere il fornitore collegato.
+	No image provider installed. Use the desktop app or configure a backend.	Nessun fornitore immagini installato. Usa l’app desktop o configura un fornitore.
+	Describe what to change in the selection	Descrivi cosa modificare nella selezione
+	Send the visible image and selection mask to this provider	Invia l’immagine visibile e la maschera di selezione a questo fornitore
+	API charges may apply. The result becomes a new layer within your selection.	Potrebbero esserci costi API. Il risultato viene aggiunto come nuovo livello nella selezione.
+	Images up to 2048 × 2048. Cancellation discards results; remote charges may still apply.	Immagini fino a 2048 × 2048. Annullare scarta il risultato; il fornitore potrebbe comunque addebitare costi.
+	Configure an image provider in AI Integrations.	Configura un fornitore immagini nelle integrazioni IA.
+	AI Integrations	Integrazioni IA

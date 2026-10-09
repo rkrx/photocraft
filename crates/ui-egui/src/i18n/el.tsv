@@ -3388,3 +3388,15 @@ fontWeight	Thin	Πολύ λεπτά
 	Color to Alpha…	Χρώμα σε άλφα…
 	Transparency Threshold	Κατώφλι διαφάνειας
 	Opacity Threshold	Κατώφλι αδιαφάνειας
+
+	Generative Fill…	Παραγωγικό γέμισμα…
+	Generative Fill	Παραγωγικό γέμισμα
+	Image provider: {provider}	Πάροχος εικόνων: {provider}
+	API key (session only)	Κλειδί API (μόνο για αυτή τη συνεδρία)
+	Leave empty to keep the connected backend.	Αφήστε κενό για να διατηρήσετε τον συνδεδεμένο πάροχο.
+	No image provider installed. Use the desktop app or configure a backend.	Δεν έχει εγκατασταθεί πάροχος εικόνων. Χρησιμοποιήστε την εφαρμογή υπολογιστή ή ρυθμίστε έναν πάροχο.
+	Describe what to change in the selection	Περιγράψτε την αλλαγή στην επιλογή
+	Send the visible image and selection mask to this provider	Αποστολή της ορατής εικόνας και της μάσκας επιλογής σε αυτόν τον πάροχο
+	API charges may apply. The result becomes a new layer within your selection.	Ενδέχεται να υπάρχουν χρεώσεις API. Το αποτέλεσμα προστίθεται ως νέο επίπεδο μέσα στην επιλογή.
+	Images up to 2048 × 2048. Cancellation discards results; remote charges may still apply.	Εικόνες έως 2048 × 2048. Η ακύρωση απορρίπτει το αποτέλεσμα· ενδέχεται να παραμείνουν χρεώσεις του παρόχου.
+	Configure an image provider in AI Integrations.	Ρυθμίστε έναν πάροχο εικόνων στις ενσωματώσεις AI.

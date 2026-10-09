@@ -2550,3 +2550,16 @@ fontWeight	Italic	Курсив
 	Color to Alpha…	Цвет в альфа-канал…
 	Transparency Threshold	Порог прозрачности
 	Opacity Threshold	Порог непрозрачности
+
+	Generative Fill…	Генеративная заливка…
+	Generative Fill	Генеративная заливка
+	Image provider: {provider}	Поставщик изображений: {provider}
+	API key (session only)	Ключ API (только для этого сеанса)
+	Leave empty to keep the connected backend.	Оставьте пустым, чтобы сохранить подключённого поставщика.
+	No image provider installed. Use the desktop app or configure a backend.	Поставщик изображений не установлен. Используйте настольное приложение или настройте поставщика.
+	Describe what to change in the selection	Опишите изменение в выделенной области
+	Send the visible image and selection mask to this provider	Отправить видимое изображение и маску выделения этому поставщику
+	API charges may apply. The result becomes a new layer within your selection.	Возможны расходы на API. Результат добавляется новым слоем внутри выделения.
+	Images up to 2048 × 2048. Cancellation discards results; remote charges may still apply.	Изображения до 2048 × 2048. Отмена отбрасывает результат; поставщик всё равно может начислить плату.
+	Configure an image provider in AI Integrations.	Настройте поставщика изображений в интеграциях ИИ.
+	AI Integrations	Интеграции ИИ

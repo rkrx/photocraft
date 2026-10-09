@@ -3300,3 +3300,15 @@ cameraRaw	Roughness	Chropowatość
 	Color to Alpha…	Kolor na alfę…
 	Transparency Threshold	Próg przezroczystości
 	Opacity Threshold	Próg krycia
+
+	Generative Fill…	Wypełnienie generatywne…
+	Generative Fill	Wypełnienie generatywne
+	Image provider: {provider}	Dostawca obrazów: {provider}
+	API key (session only)	Klucz API (tylko ta sesja)
+	Leave empty to keep the connected backend.	Pozostaw puste, aby zachować podłączonego dostawcę.
+	No image provider installed. Use the desktop app or configure a backend.	Brak dostawcy obrazów. Użyj aplikacji komputerowej lub skonfiguruj dostawcę.
+	Describe what to change in the selection	Opisz zmianę w zaznaczeniu
+	Send the visible image and selection mask to this provider	Wyślij widoczny obraz i maskę zaznaczenia do tego dostawcy
+	API charges may apply. The result becomes a new layer within your selection.	Mogą obowiązywać opłaty API. Wynik zostanie dodany jako nowa warstwa w zaznaczeniu.
+	Images up to 2048 × 2048. Cancellation discards results; remote charges may still apply.	Obrazy do 2048 × 2048. Anulowanie odrzuca wynik; dostawca nadal może naliczyć opłaty.
+	Configure an image provider in AI Integrations.	Skonfiguruj dostawcę obrazów w integracjach AI.
