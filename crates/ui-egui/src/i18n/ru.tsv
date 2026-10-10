@@ -2567,3 +2567,13 @@ fontWeight	Italic	Курсив
 	Generative Remove	Генеративное удаление
 	Objects to remove (optional)	Объекты для удаления (необязательно)
 	Select the object with a small margin of background. The background will be reconstructed.	Выделите объект с небольшим запасом фона. Фон будет восстановлен.
+	Generative Expand…	Генеративное расширение…
+	Generative Expand	Генеративное расширение
+	16:9 Banner	Баннер 16:9
+	Scene to continue (optional)	Продолжение сцены (необязательно)
+	The original image is not scaled. Only new canvas areas are generated.	Исходное изображение не масштабируется. Генерируются только новые области холста.
+	A 16:9 canvas at the original image size exceeds the 2048-pixel limit.	Холст 16:9 в исходном размере изображения превышает предел 2048 пикселей.
+	Increase at least one dimension without reducing the original image.	Увеличьте хотя бы один размер, не уменьшая исходное изображение.
+	API charges may apply. Canvas expansion and the new layer form one undo step.	Может взиматься плата за API. Расширение холста и новый слой образуют один шаг отмены.
+	Remember last text per AI dialog	Запоминать последний текст для каждого диалога ИИ
+	Turning this off clears the saved AI texts.	Отключение удаляет сохранённые тексты ИИ.

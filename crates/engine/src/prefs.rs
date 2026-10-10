@@ -727,6 +727,8 @@ impl Default for RawDefaults {
 pub struct Integrations {
     /// Default generative-image model. Credentials belong to the host, never preferences.
     pub image_model: String,
+    /// Restore the last submitted text separately for each generative dialog.
+    pub remember_dialog_texts: bool,
     /// Allow agents to drive the app over the loopback control channel / MCP bridge.
     pub allow_agent_control: bool,
     /// Default control port (0 = only when `--control` is given).
@@ -735,7 +737,22 @@ pub struct Integrations {
 
 impl Default for Integrations {
     fn default() -> Self {
-        Self { image_model: photocraft_ai::DEFAULT_MODEL.into(), allow_agent_control: true, control_port: 0 }
+        Self { image_model: photocraft_ai::DEFAULT_MODEL.into(), remember_dialog_texts: true, allow_agent_control: true, control_port: 0 }
+    }
+}
+
+const AI_TEXT_DIALOGS: [&str; 3] = [crate::generative_cmds::FILL, crate::generative_cmds::REMOVE, crate::generative_expand_cmds::EXPAND];
+
+/// Clear local AI texts when remembering is disabled, including after a multi-window merge.
+/// Empty entries overwrite texts another instance saved; deleting absent keys would not.
+pub fn enforce_ai_dialog_text_policy(value: &mut Value) {
+    if value.get("integrations").and_then(|v| v.get("rememberDialogTexts")).and_then(Value::as_bool) != Some(false) {
+        return;
+    }
+    if let Some(dialogs) = value.get_mut("dialogs").and_then(Value::as_object_mut) {
+        for command in AI_TEXT_DIALOGS {
+            dialogs.insert(command.into(), json!({"prompt": ""}));
+        }
     }
 }
 
@@ -1284,6 +1301,15 @@ impl Session {
     /// Push engine-relevant preferences into live state: every document's history limit and
     /// the layer-effect cache budget.
     pub fn apply_prefs(&mut self) {
+        if !self.prefs().integrations.remember_dialog_texts
+            && AI_TEXT_DIALOGS.iter().any(|command| self.prefs().dialogs.get(*command) != Some(&json!({"prompt": ""})))
+        {
+            self.prefs.edit(|p| {
+                for command in AI_TEXT_DIALOGS {
+                    p.dialogs.insert(command.into(), json!({"prompt": ""}));
+                }
+            });
+        }
         let n = self.prefs().performance.history_states.max(1) as usize;
         let bytes = self.prefs().performance.history_budget_bytes();
         let budget = self.prefs().performance.effect_cache_mb as usize;

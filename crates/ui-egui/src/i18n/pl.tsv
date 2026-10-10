@@ -3316,3 +3316,13 @@ cameraRaw	Roughness	Chropowatość
 	Generative Remove	Usuwanie generatywne
 	Objects to remove (optional)	Obiekty do usunięcia (opcjonalnie)
 	Select the object with a small margin of background. The background will be reconstructed.	Zaznacz obiekt z niewielkim marginesem tła. Tło zostanie odtworzone.
+	Generative Expand…	Rozszerzanie generatywne…
+	Generative Expand	Rozszerzanie generatywne
+	16:9 Banner	Baner 16:9
+	Scene to continue (optional)	Scena do kontynuacji (opcjonalnie)
+	The original image is not scaled. Only new canvas areas are generated.	Oryginalny obraz nie jest skalowany. Generowane są tylko nowe obszary płótna.
+	A 16:9 canvas at the original image size exceeds the 2048-pixel limit.	Płótno 16:9 w oryginalnym rozmiarze obrazu przekracza limit 2048 pikseli.
+	Increase at least one dimension without reducing the original image.	Zwiększ co najmniej jeden wymiar bez zmniejszania oryginalnego obrazu.
+	API charges may apply. Canvas expansion and the new layer form one undo step.	Mogą obowiązywać opłaty API. Rozszerzenie płótna i nowa warstwa tworzą jeden krok cofania.
+	Remember last text per AI dialog	Zapamiętaj ostatni tekst dla każdego okna AI
+	Turning this off clears the saved AI texts.	Wyłączenie usuwa zapisane teksty AI.

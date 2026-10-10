@@ -487,10 +487,10 @@ their own modes, an upper stroke covering lower ones.
 
 ## Generative AI in this fork
 
-See [generative-ai.md](generative-ai.md) for the integrated Generative Fill and Remove workflows, provider
+See [generative-ai.md](generative-ai.md) for the integrated Generative Fill, Remove and Expand workflows, provider
 boundary, session-only keys, explicit upload consent and limits. `OPENAI_API_KEY` configures the
 desktop and CLI/MCP hosts without placing credentials in commands.
 
 To inspect the dialog offscreen without an API request, pass `--generative-preview` to the
-`snapshot` example, create a synthetic document and selection, and invoke `edit.generativeFill` or `edit.generativeRemove`.
+`snapshot` example, create a synthetic document and selection, and invoke `edit.generativeFill`, `edit.generativeRemove` or `edit.generativeExpand` (no selection required).
 The preview factory never connects to a provider.

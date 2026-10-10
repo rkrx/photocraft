@@ -2872,3 +2872,13 @@ fontWeight	Italic	기울임
 	Generative Remove	생성형 제거
 	Objects to remove (optional)	제거할 개체 (선택 사항)
 	Select the object with a small margin of background. The background will be reconstructed.	개체 주변 배경을 조금 포함하여 선택하세요. 배경이 재구성됩니다.
+	Generative Expand…	생성형 확장…
+	Generative Expand	생성형 확장
+	16:9 Banner	16:9 배너
+	Scene to continue (optional)	이어질 장면 (선택 사항)
+	The original image is not scaled. Only new canvas areas are generated.	원본 이미지의 크기는 조정되지 않습니다. 새 캔버스 영역만 생성됩니다.
+	A 16:9 canvas at the original image size exceeds the 2048-pixel limit.	원본 이미지 크기의 16:9 캔버스는 2048픽셀 제한을 초과합니다.
+	Increase at least one dimension without reducing the original image.	원본 이미지를 줄이지 않고 하나 이상의 치수를 늘리세요.
+	API charges may apply. Canvas expansion and the new layer form one undo step.	API 요금이 발생할 수 있습니다. 캔버스 확장과 새 레이어는 한 번의 실행 취소로 되돌릴 수 있습니다.
+	Remember last text per AI dialog	AI 대화상자별 마지막 텍스트 기억
+	Turning this off clears the saved AI texts.	이 옵션을 끄면 저장된 AI 텍스트가 삭제됩니다.

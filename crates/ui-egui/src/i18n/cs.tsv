@@ -2294,3 +2294,13 @@ fontWeight	Italic	Kurzíva
 	Generative Remove	Generativní odstranění
 	Objects to remove (optional)	Objekty k odstranění (volitelné)
 	Select the object with a small margin of background. The background will be reconstructed.	Vyberte objekt s malým okrajem pozadí. Pozadí bude obnoveno.
+	Generative Expand…	Generativní rozšíření…
+	Generative Expand	Generativní rozšíření
+	16:9 Banner	Banner 16:9
+	Scene to continue (optional)	Scéna k doplnění (volitelné)
+	The original image is not scaled. Only new canvas areas are generated.	Původní obrázek se nezvětšuje. Generují se pouze nové oblasti plátna.
+	A 16:9 canvas at the original image size exceeds the 2048-pixel limit.	Plátno 16:9 při původní velikosti obrázku překračuje limit 2048 pixelů.
+	Increase at least one dimension without reducing the original image.	Zvětšete alespoň jeden rozměr bez zmenšení původního obrázku.
+	API charges may apply. Canvas expansion and the new layer form one undo step.	Mohou být účtovány poplatky API. Rozšíření plátna a nová vrstva tvoří jeden krok zpět.
+	Remember last text per AI dialog	Pamatovat si poslední text pro každý dialog AI
+	Turning this off clears the saved AI texts.	Vypnutím se smažou uložené texty AI.

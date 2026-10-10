@@ -303,7 +303,7 @@ fn remove_rejects_invalid_input_and_requires_selection_backend_and_consent() {
     assert!(!s.is_enabled(REMOVE));
     assert!(s.execute(REMOVE, json!({"consent": true})).is_err());
     assert!(!Session::new().is_enabled(REMOVE));
-    assert_eq!(s.execute("ai.status", json!({})).unwrap()["operations"], json!(["fill", "remove"]));
+    assert_eq!(s.execute("ai.status", json!({})).unwrap()["operations"], json!(["fill", "remove", "expand"]));
     assert!(REMOVE_PROMPT.chars().count() + MAX_REMOVE_DETAIL + "\nObjects to remove: ".chars().count() <= 32_000);
 }
 

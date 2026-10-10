@@ -440,7 +440,10 @@ pub fn confirm(app: &mut PhotocraftApp, id: u64) -> Result<Value, String> {
 /// schema dialog for filters, the Color Range dialog for `select.colorRange`, otherwise a bare
 /// confirm dialog.
 pub fn open_command_dialog(app: &mut PhotocraftApp, command: &str, label: &str) -> u64 {
-    if matches!(command, photocraft_engine::generative_cmds::FILL | photocraft_engine::generative_cmds::REMOVE) {
+    if matches!(
+        command,
+        photocraft_engine::generative_cmds::FILL | photocraft_engine::generative_cmds::REMOVE | photocraft_engine::generative_expand_cmds::EXPAND
+    ) {
         return crate::generative_ui::open(app, command).unwrap_or_else(|message| {
             let mut fields = serde_json::Map::new();
             fields.insert("message".into(), Value::String(message));

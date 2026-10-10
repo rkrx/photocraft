@@ -322,7 +322,7 @@ fn canvas_size(ui: &mut egui::Ui, f: &mut Map<String, Value>) {
 }
 
 /// 3×3 anchor picker; arrows point away from the anchor in the directions the canvas grows.
-fn anchor_grid(ui: &mut egui::Ui, current: &str, dw: f64, dh: f64) -> Option<&'static str> {
+pub(crate) fn anchor_grid(ui: &mut egui::Ui, current: &str, dw: f64, dh: f64) -> Option<&'static str> {
     let t = Tokens::get(ui.ctx());
     let cell = 24.0;
     let (rect, _) = ui.allocate_exact_size(vec2(cell * 3.0, cell * 3.0), Sense::hover());

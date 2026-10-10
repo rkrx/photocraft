@@ -17,14 +17,37 @@ fn command(fields: &Map<String, Value>) -> Option<&'static str> {
     match fields.get("__command").and_then(Value::as_str) {
         Some(photocraft_engine::generative_cmds::FILL) => Some(photocraft_engine::generative_cmds::FILL),
         Some(photocraft_engine::generative_cmds::REMOVE) => Some(photocraft_engine::generative_cmds::REMOVE),
+        Some(photocraft_engine::generative_expand_cmds::EXPAND) => Some(photocraft_engine::generative_expand_cmds::EXPAND),
         _ => None,
     }
+}
+
+fn valid_prompt(command: &str, text: &str) -> bool {
+    let fill = command == photocraft_engine::generative_cmds::FILL;
+    let limit = if fill { 32_000 } else { 31_000 };
+    text.chars().count() <= limit && (!fill || !text.trim().is_empty())
+}
+
+fn last_prompt(app: &PhotocraftApp, command: &str) -> String {
+    if !app.session.prefs().integrations.remember_dialog_texts {
+        return String::new();
+    }
+    app.session
+        .prefs()
+        .dialogs
+        .get(command)
+        .and_then(|v| v.get("prompt"))
+        .and_then(Value::as_str)
+        .filter(|text| valid_prompt(command, text))
+        .unwrap_or("")
+        .to_string()
 }
 
 pub fn open(app: &mut PhotocraftApp, command: &str) -> Result<u64, String> {
     let label = match command {
         photocraft_engine::generative_cmds::FILL => "Generative Fill",
         photocraft_engine::generative_cmds::REMOVE => "Generative Remove",
+        photocraft_engine::generative_expand_cmds::EXPAND => "Generative Expand",
         _ => return Err("unknown generative operation".into()),
     };
     let spec = photocraft_engine::commands::find(command).ok_or("generative editing is unavailable")?;
@@ -32,13 +55,27 @@ pub fn open(app: &mut PhotocraftApp, command: &str) -> Result<u64, String> {
     let st = app.session.active().ok_or("no document open")?;
     let fields = json!({"__generative": true, "__command": spec.id, "__label": label,
         "document": st.doc.id.0, "revision": st.revision,
-        "prompt": "", "consent": false});
-    let map = fields.as_object().cloned().ok_or("could not open generative editing")?;
+        "prompt": last_prompt(app, command), "consent": false});
+    let mut map = fields.as_object().cloned().ok_or("could not open generative editing")?;
+    if command == photocraft_engine::generative_expand_cmds::EXPAND {
+        let size = st.doc.size;
+        let target = photocraft_engine::generative_expand_cmds::banner_size(size).unwrap_or_else(|| {
+            if size.width < photocraft_ai::MAX_EDGE {
+                photocraft_doc::Size::new(size.width.saturating_add((size.width / 2).max(1)).min(photocraft_ai::MAX_EDGE), size.height)
+            } else {
+                photocraft_doc::Size::new(size.width, size.height.saturating_add((size.height / 2).max(1)).min(photocraft_ai::MAX_EDGE))
+            }
+        });
+        map.insert("width".into(), json!(target.width));
+        map.insert("height".into(), json!(target.height));
+        map.insert("anchor".into(), json!("center"));
+    }
     Ok(app.ui.open_dialog(DialogKind::Command, map))
 }
 
 /// Runtime credentials for Preferences › Integrations; the model uses normal preferences.
 pub fn settings_body(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
+    ui.small(tl!("Turning this off clears the saved AI texts."));
     let backend = provider_name(app);
     ui.label(crate::i18n::fmt(tl!("Image provider: {provider}"), &[("provider", backend)]));
     if app.services.generative_backend.is_some() {
@@ -62,7 +99,7 @@ pub fn settings_backend(app: &PhotocraftApp) -> Result<Option<std::sync::Arc<dyn
     factory(key).map(Some)
 }
 
-/// Whether Enter must stay in this form (prompt newline or opening settings).
+/// Whether Enter must stay in this form (editing a field or opening settings).
 pub fn body(app: &mut PhotocraftApp, ui: &mut egui::Ui, fields: &mut Map<String, Value>) -> bool {
     let backend = provider_name(app);
     ui.label(crate::i18n::fmt(tl!("Image provider: {provider}"), &[("provider", backend)]));
@@ -80,26 +117,78 @@ pub fn body(app: &mut PhotocraftApp, ui: &mut egui::Ui, fields: &mut Map<String,
     }
     let mut prompt = fields.get("prompt").and_then(Value::as_str).unwrap_or("").to_string();
     let remove = command(fields) == Some(photocraft_engine::generative_cmds::REMOVE);
+    let expand = command(fields) == Some(photocraft_engine::generative_expand_cmds::EXPAND);
+    let mut geometry_focused = false;
     if remove {
         ui.label(tl!("Select the object with a small margin of background. The background will be reconstructed."));
         ui.label(tl!("Objects to remove (optional)"));
+    } else if expand {
+        geometry_focused = expansion_body(app, ui, fields);
+        ui.label(tl!("Scene to continue (optional)"));
     } else {
         ui.label(tl!("Describe what to change in the selection"));
     }
     let prompt_focused = ui
-        .add(egui::TextEdit::multiline(&mut prompt).id(egui::Id::new("generative-prompt")).desired_rows(4).desired_width(f32::INFINITY).char_limit(if remove {
-            31_000
-        } else {
-            32_000
-        }))
+        .add(
+            egui::TextEdit::multiline(&mut prompt)
+                .id(egui::Id::new("generative-prompt"))
+                .desired_rows(if expand { 2 } else { 4 })
+                .desired_width(f32::INFINITY)
+                .char_limit(if remove || expand { 31_000 } else { 32_000 }),
+        )
         .has_focus();
     fields.insert("prompt".into(), json!(prompt));
     let mut consent = fields.get("consent").and_then(Value::as_bool).unwrap_or(false);
     ui.checkbox(&mut consent, tl!("Send the visible image and selection mask to this provider"));
     fields.insert("consent".into(), json!(consent));
-    ui.small(tl!("API charges may apply. The result becomes a new layer within your selection."));
+    if expand {
+        ui.small(tl!("API charges may apply. Canvas expansion and the new layer form one undo step."));
+    } else {
+        ui.small(tl!("API charges may apply. The result becomes a new layer within your selection."));
+    }
     ui.small(tl!("Images up to 2048 × 2048. Cancellation discards results; remote charges may still apply."));
-    prompt_focused || settings_opened
+    prompt_focused || settings_opened || geometry_focused
+}
+
+fn expansion_body(app: &PhotocraftApp, ui: &mut egui::Ui, fields: &mut Map<String, Value>) -> bool {
+    let Some(st) = app.session.active() else { return false };
+    let size = st.doc.size;
+    ui.label(tl!("The original image is not scaled. Only new canvas areas are generated."));
+    let banner = photocraft_engine::generative_expand_cmds::banner_size(size);
+    if ui.add_enabled(banner.is_some(), egui::Button::new(tl!("16:9 Banner"))).clicked()
+        && let Some(target) = banner
+    {
+        fields.insert("width".into(), json!(target.width));
+        fields.insert("height".into(), json!(target.height));
+    }
+    if banner.is_none() {
+        ui.small(tl!("A 16:9 canvas at the original image size exceeds the 2048-pixel limit."));
+    }
+    let mut editing_dimension = false;
+    ui.horizontal(|ui| {
+        for (key, label, fallback) in [("width", tl!("Width:"), size.width), ("height", tl!("Height:"), size.height)] {
+            let label = ui.label(label);
+            let mut value = fields.get(key).and_then(Value::as_u64).unwrap_or(u64::from(fallback));
+            let response = ui.add(egui::DragValue::new(&mut value).range(1..=u64::from(photocraft_ai::MAX_EDGE)).suffix(" px")).labelled_by(label.id);
+            editing_dimension |= response.has_focus() || response.lost_focus();
+            if response.changed() {
+                fields.insert(key.into(), json!(value));
+            }
+        }
+    });
+    ui.horizontal(|ui| {
+        ui.label(tl!("Anchor:"));
+        let anchor = fields.get("anchor").and_then(Value::as_str).unwrap_or("center").to_string();
+        let w = fields.get("width").and_then(Value::as_f64).unwrap_or(f64::from(size.width));
+        let h = fields.get("height").and_then(Value::as_f64).unwrap_or(f64::from(size.height));
+        if let Some(anchor) = crate::sizing::anchor_grid(ui, &anchor, w - f64::from(size.width), h - f64::from(size.height)) {
+            fields.insert("anchor".into(), json!(anchor));
+        }
+    });
+    if photocraft_engine::generative_expand_cmds::geometry(size, &json!(fields)).is_err() {
+        ui.small(tl!("Increase at least one dimension without reducing the original image."));
+    }
+    editing_dimension
 }
 
 fn confirm_inner(app: &mut PhotocraftApp, fields: &Map<String, Value>) -> Result<Value, String> {
@@ -108,12 +197,21 @@ fn confirm_inner(app: &mut PhotocraftApp, fields: &Map<String, Value>) -> Result
     if fields.get("document").and_then(Value::as_u64) != Some(st.doc.id.0) || fields.get("revision").and_then(Value::as_u64) != Some(st.revision) {
         return Err("The document changed. Open the generative dialog again before uploading.".into());
     }
-    app.run(
-        command,
-        json!({
-            "prompt": fields.get("prompt"), "consent": fields.get("consent")
-        }),
-    )
+    let mut params = json!({"prompt": fields.get("prompt"), "consent": fields.get("consent")});
+    if command == photocraft_engine::generative_expand_cmds::EXPAND {
+        for key in ["width", "height", "anchor"] {
+            params[key] = json!(fields.get(key));
+        }
+    }
+    // Remember submitted text, including a failed/cancelled provider request. Drafts and
+    // upload consent stay transient; only this allow-listed field crosses into preferences.
+    if app.session.prefs().integrations.remember_dialog_texts && can_confirm(app, fields) {
+        let value = json!({"prompt": fields.get("prompt")});
+        if app.session.prefs().dialogs.get(command) != Some(&value) {
+            app.session.prefs.edit(|p| p.dialogs.insert(command.into(), value));
+        }
+    }
+    app.run(command, params)
 }
 
 pub fn confirm(app: &mut PhotocraftApp, fields: &Map<String, Value>) -> Result<Value, String> {
@@ -127,9 +225,15 @@ pub fn confirm(app: &mut PhotocraftApp, fields: &Map<String, Value>) -> Result<V
 
 pub fn can_confirm(app: &PhotocraftApp, fields: &Map<String, Value>) -> bool {
     let prompt_valid = match command(fields) {
-        Some(photocraft_engine::generative_cmds::REMOVE) => fields.get("prompt").and_then(Value::as_str).is_some_and(|s| s.chars().count() <= 31_000),
+        Some(photocraft_engine::generative_cmds::REMOVE) => {
+            fields.get("prompt").and_then(Value::as_str).is_some_and(|s| valid_prompt(photocraft_engine::generative_cmds::REMOVE, s))
+        }
+        Some(photocraft_engine::generative_expand_cmds::EXPAND) => {
+            fields.get("prompt").and_then(Value::as_str).is_some_and(|s| valid_prompt(photocraft_engine::generative_expand_cmds::EXPAND, s))
+                && app.session.active().is_some_and(|st| photocraft_engine::generative_expand_cmds::geometry(st.doc.size, &json!(fields)).is_ok())
+        }
         Some(photocraft_engine::generative_cmds::FILL) => {
-            fields.get("prompt").and_then(Value::as_str).is_some_and(|s| !s.trim().is_empty() && s.chars().count() <= 32_000)
+            fields.get("prompt").and_then(Value::as_str).is_some_and(|s| valid_prompt(photocraft_engine::generative_cmds::FILL, s))
         }
         _ => false,
     };
@@ -137,8 +241,15 @@ pub fn can_confirm(app: &PhotocraftApp, fields: &Map<String, Value>) -> bool {
 }
 
 pub fn confirm_label(fields: &Map<String, Value>) -> &'static str {
-    if command(fields) == Some(photocraft_engine::generative_cmds::REMOVE) { tl!("Remove") } else { tl!("Generate") }
+    match command(fields) {
+        Some(photocraft_engine::generative_cmds::REMOVE) => tl!("Remove"),
+        Some(photocraft_engine::generative_expand_cmds::EXPAND) => tl!("Extend"),
+        _ => tl!("Generate"),
+    }
 }
+
+#[cfg(test)]
+mod remember_tests;
 
 #[cfg(test)]
 mod tests {
@@ -152,6 +263,67 @@ mod tests {
             request.validate()?;
             Ok(photocraft_ai::Response { version: photocraft_ai::VERSION, image: request.source.clone() })
         }
+    }
+    #[test]
+    fn expansion_dialog_presets_banner_without_selection_and_confirms_an_atomic_edit() {
+        struct Outpaint;
+        impl photocraft_ai::Backend for Outpaint {
+            fn id(&self) -> &'static str {
+                "expand-test"
+            }
+            fn generate(&self, request: &photocraft_ai::Request, _: &(dyn Fn() -> bool + Sync)) -> photocraft_ai::Result<photocraft_ai::Response> {
+                request.validate()?;
+                assert_eq!(request.operation, photocraft_ai::Operation::Expand);
+                let pixels = [255, 0, 0, 255].repeat(request.source.width as usize * request.source.height as usize);
+                let image =
+                    photocraft_codecs::Image::from_u8(request.source.width, request.source.height, photocraft_codecs::ChannelLayout::Rgba, pixels).unwrap();
+                let png = photocraft_codecs::encode(&image, photocraft_codecs::Format::Png, &Default::default()).unwrap();
+                Ok(photocraft_ai::Response {
+                    version: photocraft_ai::VERSION,
+                    image: photocraft_ai::PngImage::from_bytes(image.width(), image.height(), &png)?,
+                })
+            }
+        }
+        let mut app = PhotocraftApp::new(Default::default(), Default::default());
+        app.run("file.new", json!({"width": 8, "height": 8})).unwrap();
+        let ctx = egui::Context::default();
+        let result = crate::menus::invoke(&mut app, &ctx, photocraft_engine::generative_expand_cmds::EXPAND, json!({})).unwrap();
+        let id = result["dialog"].as_u64().unwrap();
+        let mut fields = app.ui.dialog_mut(id).unwrap().fields.clone();
+        assert_eq!(fields["__label"], "Generative Expand");
+        assert_eq!((fields["width"].as_u64(), fields["height"].as_u64()), (Some(16), Some(9)));
+        assert_eq!(fields["anchor"], "center");
+        assert_eq!(confirm_label(&fields), tl!("Extend"));
+        assert!(!can_confirm(&app, &fields));
+        fields.insert("consent".into(), json!(true));
+        assert!(!can_confirm(&app, &fields));
+        app.session.generative_backend = Some(std::sync::Arc::new(Outpaint));
+        assert!(can_confirm(&app, &fields));
+        let mut invalid = fields.clone();
+        invalid.insert("width".into(), json!(7));
+        assert!(!can_confirm(&app, &invalid));
+        assert!(confirm(&mut app, &invalid).is_err());
+        assert_eq!(app.session.active().unwrap().doc.size, photocraft_doc::Size::new(8, 8));
+        app.ui.dialog_mut(id).unwrap().fields = fields;
+        let result = crate::dialogs::confirm(&mut app, id).unwrap();
+        assert_eq!(result["operation"], "expand");
+        assert_eq!(app.session.active().unwrap().doc.size, photocraft_doc::Size::new(16, 9));
+        assert_eq!(app.session.active().unwrap().doc.layers.len(), 2);
+        app.run("edit.undo", json!({})).unwrap();
+        assert_eq!(app.session.active().unwrap().doc.size, photocraft_doc::Size::new(8, 8));
+        assert_eq!(app.session.active().unwrap().doc.layers.len(), 1);
+    }
+    #[test]
+    fn large_square_uses_custom_size_and_stale_expansion_cannot_upload() {
+        let mut app = PhotocraftApp::new(Default::default(), Default::default());
+        app.run("file.new", json!({"width": 1200, "height": 1200})).unwrap();
+        let id = open(&mut app, photocraft_engine::generative_expand_cmds::EXPAND).unwrap();
+        let fields = app.ui.dialog_mut(id).unwrap().fields.clone();
+        assert_eq!(fields["width"], 1800);
+        assert_eq!(fields["height"], 1200);
+        assert!(photocraft_engine::generative_expand_cmds::geometry(app.session.active().unwrap().doc.size, &json!(fields)).is_ok());
+        app.run("image.canvasSize", json!({"width": 1210, "height": 1200})).unwrap();
+        assert!(confirm(&mut app, &fields).unwrap_err().contains("document changed"));
     }
     #[test]
     fn removal_dialog_needs_consent_but_no_description_and_dispatches_remove() {
@@ -195,6 +367,30 @@ mod tests {
         assert_eq!(app.session.active().unwrap().doc.layers.len(), 2);
         app.run("edit.undo", json!({})).unwrap();
         assert_eq!(app.session.active().unwrap().doc.layers.len(), 1);
+    }
+    #[test]
+    fn enter_in_expansion_dimensions_does_not_start_an_upload() {
+        use egui_kittest::{Harness, kittest::Queryable};
+        let mut app = PhotocraftApp::new(Default::default(), Default::default());
+        app.run("file.new", json!({"width": 8, "height": 8})).unwrap();
+        app.session.generative_backend = Some(std::sync::Arc::new(Echo));
+        let id = open(&mut app, photocraft_engine::generative_expand_cmds::EXPAND).unwrap();
+        app.ui.dialog_mut(id).unwrap().fields.insert("consent".into(), json!(true));
+        let mut h = Harness::builder().with_size(egui::vec2(1200.0, 900.0)).build_eframe(move |cc| {
+            PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
+            app
+        });
+        h.run_steps(4);
+        for label in [tl!("Width:"), tl!("Height:")] {
+            h.get_by_label(label).click();
+            h.run_steps(4);
+            h.key_press(egui::Key::Enter);
+            h.run_steps(4);
+            assert!(h.state().ui.dialogs.iter().any(|dialog| dialog.id == id));
+            assert_eq!(h.state().session.active().unwrap().doc.size, photocraft_doc::Size::new(8, 8));
+            assert_eq!(h.state().session.active().unwrap().doc.layers.len(), 1);
+            assert!(!h.state().ui.status_error, "dimension confirmation must not call the provider");
+        }
     }
     #[test]
     fn enter_in_prompt_does_not_start_an_upload() {

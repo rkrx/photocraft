@@ -2302,3 +2302,13 @@ fontWeight	Italic	斜体
 	Generative Remove	生成式移除
 	Objects to remove (optional)	要移除的对象（可选）
 	Select the object with a small margin of background. The background will be reconstructed.	选择对象时包含少量周围背景。背景将被重建。
+	Generative Expand…	生成式扩展…
+	Generative Expand	生成式扩展
+	16:9 Banner	16:9 横幅
+	Scene to continue (optional)	要延续的场景（可选）
+	The original image is not scaled. Only new canvas areas are generated.	原始图像不会被缩放。仅生成新增的画布区域。
+	A 16:9 canvas at the original image size exceeds the 2048-pixel limit.	按原始图像尺寸创建的16:9画布超过2048像素限制。
+	Increase at least one dimension without reducing the original image.	至少增大一个尺寸，不缩小原始图像。
+	API charges may apply. Canvas expansion and the new layer form one undo step.	可能产生API费用。画布扩展与新图层可通过一次撤销恢复。
+	Remember last text per AI dialog	记住每个 AI 对话框的上次文本
+	Turning this off clears the saved AI texts.	关闭此选项会清除已保存的 AI 文本。

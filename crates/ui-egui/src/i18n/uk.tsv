@@ -3401,3 +3401,13 @@ cameraRaw	Masking	Маскування
 	Generative Remove	Генеративне видалення
 	Objects to remove (optional)	Об’єкти для видалення (необов’язково)
 	Select the object with a small margin of background. The background will be reconstructed.	Виділіть об’єкт із невеликим запасом фону. Фон буде відновлено.
+	Generative Expand…	Генеративне розширення…
+	Generative Expand	Генеративне розширення
+	16:9 Banner	Банер 16:9
+	Scene to continue (optional)	Продовження сцени (необов’язково)
+	The original image is not scaled. Only new canvas areas are generated.	Початкове зображення не масштабується. Генеруються лише нові області полотна.
+	A 16:9 canvas at the original image size exceeds the 2048-pixel limit.	Полотно 16:9 у початковому розмірі зображення перевищує межу 2048 пікселів.
+	Increase at least one dimension without reducing the original image.	Збільште принаймні один розмір, не зменшуючи початкове зображення.
+	API charges may apply. Canvas expansion and the new layer form one undo step.	Може стягуватися плата за API. Розширення полотна та новий шар утворюють один крок скасування.
+	Remember last text per AI dialog	Запам’ятовувати останній текст для кожного діалогу ШІ
+	Turning this off clears the saved AI texts.	Вимкнення видаляє збережені тексти ШІ.

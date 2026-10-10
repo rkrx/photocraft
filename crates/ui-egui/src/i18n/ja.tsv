@@ -3318,3 +3318,13 @@ fontWeight	Italic	斜体
 	Generative Remove	生成削除
 	Objects to remove (optional)	削除するオブジェクト（任意）
 	Select the object with a small margin of background. The background will be reconstructed.	オブジェクトの周囲の背景を少し含めて選択してください。背景が再構成されます。
+	Generative Expand…	生成拡張…
+	Generative Expand	生成拡張
+	16:9 Banner	16:9 バナー
+	Scene to continue (optional)	続けるシーン（任意）
+	The original image is not scaled. Only new canvas areas are generated.	元の画像は拡大縮小されません。新しいカンバス領域のみが生成されます。
+	A 16:9 canvas at the original image size exceeds the 2048-pixel limit.	元の画像サイズを維持した16:9カンバスは2048ピクセルの制限を超えます。
+	Increase at least one dimension without reducing the original image.	元の画像を縮小せずに、少なくとも一方の寸法を増やしてください。
+	API charges may apply. Canvas expansion and the new layer form one undo step.	API料金が発生する場合があります。カンバスの拡張と新しいレイヤーは1回の取り消しで戻せます。
+	Remember last text per AI dialog	AIダイアログごとに最後のテキストを記憶
+	Turning this off clears the saved AI texts.	オフにすると、保存されたAIテキストが削除されます。

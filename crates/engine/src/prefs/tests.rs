@@ -23,6 +23,45 @@ fn defaults_match_photoshop() {
 }
 
 #[test]
+fn ai_dialog_text_preference_defaults_to_on_and_forgets_only_ai_texts() {
+    let mut s = Session::new();
+    s.load_prefs_json(r#"{"integrations":{"imageModel":"legacy-model"}}"#).unwrap();
+    assert!(s.prefs().integrations.remember_dialog_texts);
+    s.prefs.edit(|p| {
+        for command in AI_TEXT_DIALOGS {
+            p.dialogs.insert(command.into(), json!({"prompt": "saved text"}));
+        }
+        p.dialogs.insert("edit.fill".into(), json!({"contents": "background"}));
+    });
+    assert!(s.execute("prefs.set", json!({"path": "integrations.rememberDialogTexts", "value": "false"})).is_err());
+    assert!(s.prefs().integrations.remember_dialog_texts);
+    s.execute("prefs.set", json!({"path": "integrations.rememberDialogTexts", "value": false})).unwrap();
+    for command in AI_TEXT_DIALOGS {
+        assert_eq!(s.prefs().dialogs[command], json!({"prompt": ""}));
+    }
+    assert_eq!(s.prefs().dialogs["edit.fill"], json!({"contents": "background"}));
+    assert_eq!(s.prefs().integrations.image_model, "legacy-model");
+    let mut restored = Session::new();
+    restored.load_prefs_json(&s.prefs_to_json()).unwrap();
+    assert!(!restored.prefs().integrations.remember_dialog_texts);
+    assert_eq!(restored.prefs(), s.prefs());
+    s.execute("prefs.reset", json!({"path": "integrations.rememberDialogTexts"})).unwrap();
+    assert!(s.prefs().integrations.remember_dialog_texts);
+    assert!(!s.prefs_to_json().contains("saved text"));
+}
+
+#[test]
+fn disabled_ai_text_policy_clears_a_stale_merged_prompt_without_touching_other_dialogs() {
+    let mut value = json!({"integrations": {"rememberDialogTexts": false}, "dialogs": {
+        "edit.generativeFill": {"prompt": "from another window"}, "file.new": {"width": 640}}});
+    enforce_ai_dialog_text_policy(&mut value);
+    for command in AI_TEXT_DIALOGS {
+        assert_eq!(value["dialogs"][command], json!({"prompt": ""}));
+    }
+    assert_eq!(value["dialogs"]["file.new"], json!({"width": 640}));
+}
+
+#[test]
 fn image_model_preferences_validate_persist_and_load_legacy_settings() {
     let mut s = Session::new();
     s.load_prefs_json(r#"{"integrations":{"allowAgentControl":true,"controlPort":0}}"#).unwrap();

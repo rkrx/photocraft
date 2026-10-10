@@ -2715,3 +2715,13 @@ fontWeight	Italic	Italique
 	Generative Remove	Suppression générative
 	Objects to remove (optional)	Objets à supprimer (facultatif)
 	Select the object with a small margin of background. The background will be reconstructed.	Sélectionnez l’objet avec une petite marge de fond. Le fond sera reconstitué.
+	Generative Expand…	Extension générative…
+	Generative Expand	Extension générative
+	16:9 Banner	Bannière 16:9
+	Scene to continue (optional)	Scène à prolonger (facultatif)
+	The original image is not scaled. Only new canvas areas are generated.	L’image originale n’est pas redimensionnée. Seules les nouvelles zones du canevas sont générées.
+	A 16:9 canvas at the original image size exceeds the 2048-pixel limit.	Un canevas 16:9 à la taille d’origine de l’image dépasse la limite de 2048 pixels.
+	Increase at least one dimension without reducing the original image.	Augmentez au moins une dimension sans réduire l’image originale.
+	API charges may apply. Canvas expansion and the new layer form one undo step.	Des frais API peuvent s’appliquer. L’extension du canevas et le nouveau calque forment une seule étape d’annulation.
+	Remember last text per AI dialog	Mémoriser le dernier texte de chaque dialogue IA
+	Turning this off clears the saved AI texts.	La désactivation efface les textes IA enregistrés.

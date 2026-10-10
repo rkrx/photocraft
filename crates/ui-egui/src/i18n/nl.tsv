@@ -3479,3 +3479,13 @@ cameraRaw	Whites	Witten
 	Generative Remove	Generatief verwijderen
 	Objects to remove (optional)	Te verwijderen objecten (optioneel)
 	Select the object with a small margin of background. The background will be reconstructed.	Selecteer het object met een kleine rand achtergrond. De achtergrond wordt gereconstrueerd.
+	Generative Expand…	Generatief uitbreiden…
+	Generative Expand	Generatief uitbreiden
+	16:9 Banner	16:9-banner
+	Scene to continue (optional)	Voort te zetten scène (optioneel)
+	The original image is not scaled. Only new canvas areas are generated.	Het oorspronkelijke beeld wordt niet geschaald. Alleen nieuwe canvasgebieden worden gegenereerd.
+	A 16:9 canvas at the original image size exceeds the 2048-pixel limit.	Een 16:9-canvas op de oorspronkelijke beeldgrootte overschrijdt de limiet van 2048 pixels.
+	Increase at least one dimension without reducing the original image.	Vergroot minstens één afmeting zonder het oorspronkelijke beeld te verkleinen.
+	API charges may apply. Canvas expansion and the new layer form one undo step.	Er kunnen API-kosten gelden. De canvasuitbreiding en de nieuwe laag vormen één stap om ongedaan te maken.
+	Remember last text per AI dialog	Laatste tekst per AI-dialoog onthouden
+	Turning this off clears the saved AI texts.	Uitschakelen wist de opgeslagen AI-teksten.

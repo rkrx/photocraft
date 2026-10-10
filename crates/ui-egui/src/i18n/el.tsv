@@ -3404,3 +3404,13 @@ fontWeight	Thin	Πολύ λεπτά
 	Generative Remove	Παραγωγική αφαίρεση
 	Objects to remove (optional)	Αντικείμενα προς αφαίρεση (προαιρετικό)
 	Select the object with a small margin of background. The background will be reconstructed.	Επιλέξτε το αντικείμενο με ένα μικρό περιθώριο φόντου. Το φόντο θα ανακατασκευαστεί.
+	Generative Expand…	Παραγωγική επέκταση…
+	Generative Expand	Παραγωγική επέκταση
+	16:9 Banner	Μπάνερ 16:9
+	Scene to continue (optional)	Σκηνή για επέκταση (προαιρετικό)
+	The original image is not scaled. Only new canvas areas are generated.	Η αρχική εικόνα δεν αλλάζει κλίμακα. Δημιουργούνται μόνο οι νέες περιοχές του καμβά.
+	A 16:9 canvas at the original image size exceeds the 2048-pixel limit.	Ένας καμβάς 16:9 στο αρχικό μέγεθος εικόνας υπερβαίνει το όριο των 2048 pixel.
+	Increase at least one dimension without reducing the original image.	Αυξήστε τουλάχιστον μία διάσταση χωρίς να μειώσετε την αρχική εικόνα.
+	API charges may apply. Canvas expansion and the new layer form one undo step.	Ενδέχεται να ισχύουν χρεώσεις API. Η επέκταση καμβά και η νέα στρώση αποτελούν ένα βήμα αναίρεσης.
+	Remember last text per AI dialog	Απομνημόνευση τελευταίου κειμένου ανά διάλογο AI
+	Turning this off clears the saved AI texts.	Η απενεργοποίηση διαγράφει τα αποθηκευμένα κείμενα AI.

@@ -18,17 +18,23 @@ const MAX_REMOVE_DETAIL: usize = 31_000;
 fn error(e: impl std::fmt::Display) -> EngineError {
     EngineError::Other(e.to_string())
 }
-fn enabled(s: &Session) -> std::result::Result<(), String> {
+pub(crate) fn document_enabled(s: &Session) -> std::result::Result<(), String> {
     let d = s.active().ok_or("no document open")?;
     photocraft_ai::dimensions(d.doc.size.width, d.doc.size.height).map_err(|e| e.to_string())?;
-    if d.doc.selection.as_ref().is_none_or(|mask| mask.content_bounds().intersect(&d.doc.bounds()).is_empty()) {
-        return Err("make a selection before generative editing".into());
-    }
     if !matches!(
         d.doc.mode,
         photocraft_color::ColorMode::Rgb | photocraft_color::ColorMode::Grayscale | photocraft_color::ColorMode::Cmyk | photocraft_color::ColorMode::Lab
     ) {
         return Err("convert to RGB, Gray, CMYK or Lab before generative editing".into());
+    }
+    Ok(())
+}
+
+fn enabled(s: &Session) -> std::result::Result<(), String> {
+    document_enabled(s)?;
+    let d = s.active().ok_or("no document open")?;
+    if d.doc.selection.as_ref().is_none_or(|mask| mask.content_bounds().intersect(&d.doc.bounds()).is_empty()) {
+        return Err("make a selection before generative editing".into());
     }
     Ok(())
 }
@@ -65,7 +71,7 @@ pub fn specs() -> Vec<CommandSpec> {
             journal: false,
             run: |s, _| {
                 Ok(
-                    json!({"configured": s.generative_backend.is_some(), "backend": s.generative_backend.as_ref().map(|b| b.id()), "protocol": VERSION, "operations": ["fill", "remove"], "maxEdge": MAX_EDGE}),
+                    json!({"configured": s.generative_backend.is_some(), "backend": s.generative_backend.as_ref().map(|b| b.id()), "protocol": VERSION, "operations": ["fill", "remove", "expand"], "maxEdge": MAX_EDGE}),
                 )
             },
         },
@@ -96,31 +102,15 @@ fn edit(s: &mut Session, p: &Value, operation: Operation) -> Result<Value> {
             let prompt = if detail.trim().is_empty() { REMOVE_PROMPT.to_string() } else { format!("{REMOVE_PROMPT}\nObjects to remove: {}", detail.trim()) };
             ("Generative Remove", prompt)
         }
+        Operation::Expand => return Err(error("use the Generative Expand command with a target size")),
     };
-    let model = match p.get("model") {
-        None => s.prefs().integrations.image_model.clone(),
-        Some(Value::String(model)) => model.clone(),
-        Some(_) => return Err(error("model must be text")),
-    };
-    if model.is_empty() || model.len() > 128 || !model.bytes().all(|b| b.is_ascii_alphanumeric() || matches!(b, b'-' | b'.')) {
-        return Err(error("invalid model identifier"));
-    }
-    if p.get("consent").and_then(Value::as_bool) != Some(true) {
-        return Err(error("confirm image upload with consent: true"));
-    }
-    let backend: Arc<dyn Backend> = s.generative_backend.clone().ok_or_else(|| error("configure an image-generation backend first"))?;
+    let (model, backend) = options(s, p)?;
     crate::jobs::edit_job(
         s,
         label,
         move |doc, active, ctx| {
             let request = prepare(doc, operation, prompt, model, ctx)?;
-            ctx.check()?;
-            ctx.progress(0.2, "Generating image (cancelling discards the result; the provider may still charge)");
-            let response = backend.generate(&request, &|| ctx.cancelled()).map_err(|e| match e {
-                photocraft_ai::Error::Cancelled => EngineError::Cancelled,
-                other => error(other),
-            })?;
-            ctx.check()?;
+            let response = generate(backend.as_ref(), &request, ctx)?;
             ctx.progress(0.85, "Preparing generated layer");
             let surface = result_surface(doc, &response, ctx)?;
             ctx.check()?;
@@ -134,7 +124,34 @@ fn edit(s: &mut Session, p: &Value, operation: Operation) -> Result<Value> {
     )
 }
 
-fn encode(width: u32, height: u32, pixels: Vec<u8>) -> Result<PngImage> {
+pub(crate) fn options(s: &Session, p: &Value) -> Result<(String, Arc<dyn Backend>)> {
+    let model = match p.get("model") {
+        None => s.prefs().integrations.image_model.clone(),
+        Some(Value::String(model)) => model.clone(),
+        Some(_) => return Err(error("model must be text")),
+    };
+    if model.is_empty() || model.len() > 128 || !model.bytes().all(|b| b.is_ascii_alphanumeric() || matches!(b, b'-' | b'.')) {
+        return Err(error("invalid model identifier"));
+    }
+    if p.get("consent").and_then(Value::as_bool) != Some(true) {
+        return Err(error("confirm image upload with consent: true"));
+    }
+    let backend: Arc<dyn Backend> = s.generative_backend.clone().ok_or_else(|| error("configure an image-generation backend first"))?;
+    Ok((model, backend))
+}
+
+pub(crate) fn generate(backend: &dyn Backend, request: &Request, ctx: &JobCtx) -> Result<Response> {
+    ctx.check()?;
+    ctx.progress(0.2, "Generating image (cancelling discards the result; the provider may still charge)");
+    let response = backend.generate(request, &|| ctx.cancelled()).map_err(|e| match e {
+        photocraft_ai::Error::Cancelled => EngineError::Cancelled,
+        other => error(other),
+    })?;
+    ctx.check()?;
+    Ok(response)
+}
+
+pub(crate) fn encode(width: u32, height: u32, pixels: Vec<u8>) -> Result<PngImage> {
     let image = Image::from_u8(width, height, ChannelLayout::Rgba, pixels).map_err(error)?;
     let png = photocraft_codecs::encode(&image, Format::Png, &EncodeOptions::default()).map_err(error)?;
     PngImage::from_bytes(width, height, &png).map_err(error)
@@ -146,16 +163,7 @@ fn prepare(doc: &Document, operation: Operation, prompt: String, model: String, 
     let selection = doc.selection.as_ref().ok_or_else(|| error("no selection"))?;
     ctx.check()?;
     ctx.progress(0.02, "Preparing image and selection");
-    let mut buffer = photocraft_compose::render(doc, doc.bounds());
-    let srgb = Builtin::Srgb.profile();
-    let transform = Transform::new(&crate::color_cmds::composite_profile(doc), srgb, Intent::RelativeColorimetric, true).map_err(error)?;
-    let mut values: Vec<f32> = buffer.px.iter().flat_map(|px| px.iter().copied()).collect();
-    transform.apply(&mut values, 4);
-    for (pixel, converted) in buffer.px.iter_mut().zip(values.as_chunks::<4>().0) {
-        *pixel = *converted;
-    }
-    ctx.check()?;
-    let source = encode(width, height, buffer.to_rgba8().pixels)?;
+    let source = encode(width, height, visible_pixels(doc, ctx)?)?;
     let mut mask = Vec::with_capacity(width as usize * height as usize * 4);
     for y in 0..height {
         ctx.check()?;
@@ -170,11 +178,29 @@ fn prepare(doc: &Document, operation: Operation, prompt: String, model: String, 
     Ok(request)
 }
 
+pub(crate) fn visible_pixels(doc: &Document, ctx: &JobCtx) -> Result<Vec<u8>> {
+    photocraft_ai::dimensions(doc.size.width, doc.size.height).map_err(error)?;
+    ctx.check()?;
+    transport_pixels(doc, photocraft_compose::render(doc, doc.bounds()), ctx)
+}
+
+pub(crate) fn transport_pixels(doc: &Document, mut buffer: photocraft_compose::Buffer, ctx: &JobCtx) -> Result<Vec<u8>> {
+    let srgb = Builtin::Srgb.profile();
+    let transform = Transform::new(&crate::color_cmds::composite_profile(doc), srgb, Intent::RelativeColorimetric, true).map_err(error)?;
+    let mut values: Vec<f32> = buffer.px.iter().flat_map(|px| px.iter().copied()).collect();
+    transform.apply(&mut values, 4);
+    for (pixel, converted) in buffer.px.iter_mut().zip(values.as_chunks::<4>().0) {
+        *pixel = *converted;
+    }
+    ctx.check()?;
+    Ok(buffer.to_rgba8().pixels)
+}
+
 fn finite_coverage(v: f32) -> f32 {
     if v.is_finite() { v.clamp(0.0, 1.0) } else { 0.0 }
 }
 
-fn result_surface(doc: &Document, response: &Response, ctx: &JobCtx) -> Result<Surface> {
+pub(crate) fn result_surface(doc: &Document, response: &Response, ctx: &JobCtx) -> Result<Surface> {
     if response.version != VERSION {
         return Err(error("unsupported image response version"));
     }

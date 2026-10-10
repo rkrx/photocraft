@@ -2702,3 +2702,13 @@ fontWeight	Italic	Miring
 	Generative Remove	Hapus generatif
 	Objects to remove (optional)	Objek yang akan dihapus (opsional)
 	Select the object with a small margin of background. The background will be reconstructed.	Pilih objek dengan sedikit area latar di sekitarnya. Latar akan direkonstruksi.
+	Generative Expand…	Perluasan generatif…
+	Generative Expand	Perluasan generatif
+	16:9 Banner	Banner 16:9
+	Scene to continue (optional)	Adegan yang dilanjutkan (opsional)
+	The original image is not scaled. Only new canvas areas are generated.	Gambar asli tidak diskalakan. Hanya area kanvas baru yang dihasilkan.
+	A 16:9 canvas at the original image size exceeds the 2048-pixel limit.	Kanvas 16:9 dengan ukuran gambar asli melebihi batas 2048 piksel.
+	Increase at least one dimension without reducing the original image.	Perbesar setidaknya satu dimensi tanpa memperkecil gambar asli.
+	API charges may apply. Canvas expansion and the new layer form one undo step.	Biaya API mungkin berlaku. Perluasan kanvas dan lapisan baru menjadi satu langkah urungkan.
+	Remember last text per AI dialog	Ingat teks terakhir untuk setiap dialog AI
+	Turning this off clears the saved AI texts.	Menonaktifkan ini menghapus teks AI yang disimpan.

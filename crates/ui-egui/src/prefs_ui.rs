@@ -312,14 +312,15 @@ fn persist(app: &mut PhotocraftApp, now: f64) -> Option<f64> {
 fn write_prefs(app: &mut PhotocraftApp, ours: &Value) -> Result<(), String> {
     let Some(save) = app.services.save_prefs.as_mut() else { return Ok(()) };
     let stored = app.services.load_prefs.as_mut().and_then(|load| load()).and_then(|t| serde_json::from_str::<Value>(&t).ok());
-    let text = match (stored, &app.prefs_rt.saved_value) {
+    let mut merged = match (stored, &app.prefs_rt.saved_value) {
         (Some(mut theirs @ Value::Object(_)), Some(base)) => {
             merge_changes(base, ours, &mut theirs);
-            serde_json::to_string_pretty(&theirs)
+            theirs
         }
-        _ => serde_json::to_string_pretty(ours),
-    }
-    .map_err(|e| e.to_string())?;
+        _ => ours.clone(),
+    };
+    prefs::enforce_ai_dialog_text_policy(&mut merged);
+    let text = serde_json::to_string_pretty(&merged).map_err(|e| e.to_string())?;
     save(&text)
 }
 
@@ -802,6 +803,9 @@ pub fn body(app: &mut PhotocraftApp, ui: &mut egui::Ui, f: &mut Map<String, Valu
 }
 
 fn humanize(key: &str) -> String {
+    if key == "rememberDialogTexts" {
+        return "Remember last text per AI dialog".into();
+    }
     if key == "imageModel" {
         return "Model".into();
     }
@@ -1630,6 +1634,24 @@ mod tests {
 
     fn stored(store: &Arc<Mutex<Option<String>>>) -> Value {
         serde_json::from_str(store.lock().unwrap().as_deref().unwrap_or("null")).unwrap()
+    }
+
+    #[test]
+    fn merged_preferences_cannot_restore_ai_texts_when_another_window_disabled_remembering() {
+        let (mut first, store) = app_with_store();
+        let mut second = app_on(&store, Arc::default());
+        first.run("prefs.set", json!({"path": "integrations.rememberDialogTexts", "value": false})).unwrap();
+        save_preferences(&mut first).unwrap();
+        second.session.prefs.edit(|p| {
+            p.dialogs.insert(photocraft_engine::generative_cmds::FILL.into(), json!({"prompt": "stale window text"}));
+            p.dialogs.insert("file.new".into(), json!({"width": 640}));
+        });
+        save_preferences(&mut second).unwrap();
+        let saved = stored(&store);
+        assert_eq!(saved["integrations"]["rememberDialogTexts"], false);
+        assert_eq!(saved["dialogs"][photocraft_engine::generative_cmds::FILL], json!({"prompt": ""}));
+        assert_eq!(saved["dialogs"]["file.new"], json!({"width": 640}));
+        assert!(!saved.to_string().contains("stale window text"));
     }
 
     #[test]

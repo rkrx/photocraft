@@ -2362,3 +2362,13 @@ fontWeight	Italic	Cursiva
 	Generative Remove	Eliminación generativa
 	Objects to remove (optional)	Objetos que eliminar (opcional)
 	Select the object with a small margin of background. The background will be reconstructed.	Selecciona el objeto con un pequeño margen de fondo. El fondo se reconstruirá.
+	Generative Expand…	Expansión generativa…
+	Generative Expand	Expansión generativa
+	16:9 Banner	Banner 16:9
+	Scene to continue (optional)	Escena que continuar (opcional)
+	The original image is not scaled. Only new canvas areas are generated.	La imagen original no se escala. Solo se generan las nuevas áreas del lienzo.
+	A 16:9 canvas at the original image size exceeds the 2048-pixel limit.	Un lienzo 16:9 con el tamaño original de la imagen supera el límite de 2048 píxeles.
+	Increase at least one dimension without reducing the original image.	Aumenta al menos una dimensión sin reducir la imagen original.
+	API charges may apply. Canvas expansion and the new layer form one undo step.	Pueden aplicarse cargos de API. La expansión del lienzo y la nueva capa forman un paso de deshacer.
+	Remember last text per AI dialog	Recordar el último texto de cada diálogo de IA
+	Turning this off clears the saved AI texts.	Al desactivar esta opción se borran los textos de IA guardados.

@@ -187,21 +187,27 @@ mod tests {
         worker.join().unwrap();
     }
     #[test]
-    fn removal_instructions_use_the_same_bounded_image_edit_transport() {
-        let backend = OpenAi::new("test-key").unwrap();
-        let mut request = request();
-        request.operation = photocraft_ai::Operation::Remove;
-        request.prompt = "Remove the cable and reconstruct the background.".into();
-        let png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aL1sAAAAASUVORK5CYII=";
-        let response = serde_json::json!({"data": [{"b64_json": png}]}).to_string();
-        let (endpoint, worker) = server("200 OK", response);
-        backend.generate_at(&request, &|| false, &endpoint).unwrap();
-        let body = worker.join().unwrap();
-        assert_eq!(body["prompt"], request.prompt);
-        assert_eq!(body["model"], request.model);
-        assert_eq!(body["images"][0]["image_url"], request.source.data_url());
-        assert_eq!(body["mask"]["image_url"], request.mask.data_url());
-        assert!(!body.to_string().contains("test-key"));
+    fn removal_and_expansion_use_the_same_bounded_image_edit_transport() {
+        for operation in [photocraft_ai::Operation::Remove, photocraft_ai::Operation::Expand] {
+            let backend = OpenAi::new("test-key").unwrap();
+            let mut request = request();
+            request.operation = operation;
+            request.prompt = match operation {
+                photocraft_ai::Operation::Remove => "Remove the cable and reconstruct the background.",
+                _ => "Continue the image naturally into the new margins.",
+            }
+            .into();
+            let png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aL1sAAAAASUVORK5CYII=";
+            let response = serde_json::json!({"data": [{"b64_json": png}]}).to_string();
+            let (endpoint, worker) = server("200 OK", response);
+            backend.generate_at(&request, &|| false, &endpoint).unwrap();
+            let body = worker.join().unwrap();
+            assert_eq!(body["prompt"], request.prompt);
+            assert_eq!(body["model"], request.model);
+            assert_eq!(body["images"][0]["image_url"], request.source.data_url());
+            assert_eq!(body["mask"]["image_url"], request.mask.data_url());
+            assert!(!body.to_string().contains("test-key"));
+        }
     }
     #[test]
     fn malformed_provider_responses_fail() {

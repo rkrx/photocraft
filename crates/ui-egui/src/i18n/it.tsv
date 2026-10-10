@@ -2363,3 +2363,13 @@ fontWeight	Italic	Corsivo
 	Generative Remove	Rimozione generativa
 	Objects to remove (optional)	Oggetti da rimuovere (facoltativo)
 	Select the object with a small margin of background. The background will be reconstructed.	Seleziona l’oggetto includendo un piccolo margine di sfondo. Lo sfondo verrà ricostruito.
+	Generative Expand…	Espansione generativa…
+	Generative Expand	Espansione generativa
+	16:9 Banner	Banner 16:9
+	Scene to continue (optional)	Scena da continuare (facoltativo)
+	The original image is not scaled. Only new canvas areas are generated.	L’immagine originale non viene ridimensionata. Vengono generate solo le nuove aree del quadro.
+	A 16:9 canvas at the original image size exceeds the 2048-pixel limit.	Un quadro 16:9 alla dimensione originale dell’immagine supera il limite di 2048 pixel.
+	Increase at least one dimension without reducing the original image.	Aumenta almeno una dimensione senza ridurre l’immagine originale.
+	API charges may apply. Canvas expansion and the new layer form one undo step.	Potrebbero essere addebitati costi API. L’espansione del quadro e il nuovo livello formano un unico passaggio di annullamento.
+	Remember last text per AI dialog	Ricorda l’ultimo testo per ogni finestra IA
+	Turning this off clears the saved AI texts.	Disattivando questa opzione si cancellano i testi IA salvati.

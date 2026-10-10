@@ -66,6 +66,8 @@ pub enum Operation {
     Fill,
     /// Remove selected objects and reconstruct the surrounding background.
     Remove,
+    /// Continue the image into the editable margins of a padded target canvas.
+    Expand,
 }
 
 /// No paths, credentials, engine references or editor document types cross this boundary.
@@ -156,5 +158,19 @@ mod tests {
         let mut wire = serde_json::to_value(r).unwrap();
         wire["operation"] = serde_json::json!("unknown");
         assert!(serde_json::from_value::<Request>(wire).is_err());
+    }
+    #[test]
+    fn expansion_uses_the_padded_canvas_dimensions_and_explicit_operation() {
+        let mut r = request();
+        r.operation = Operation::Expand;
+        r.prompt = "Continue the image into the editable margins.".into();
+        r.source.width = 16;
+        r.source.height = 9;
+        r.mask.width = 16;
+        r.mask.height = 9;
+        r.validate().unwrap();
+        let wire = serde_json::to_value(&r).unwrap();
+        assert_eq!(wire["operation"], "expand");
+        assert_eq!(serde_json::from_value::<Request>(wire).unwrap(), r);
     }
 }

@@ -2332,3 +2332,13 @@ fontWeight	Italic	Kursiv
 	Generative Remove	Generatives Entfernen
 	Objects to remove (optional)	Zu entfernende Objekte (optional)
 	Select the object with a small margin of background. The background will be reconstructed.	Wähle das Objekt mit etwas Hintergrund aus. Der Hintergrund wird rekonstruiert.
+	Generative Expand…	Generatives Erweitern…
+	Generative Expand	Generatives Erweitern
+	16:9 Banner	16:9-Banner
+	Scene to continue (optional)	Fortzusetzende Szene (optional)
+	The original image is not scaled. Only new canvas areas are generated.	Das Originalbild wird nicht skaliert. Nur neue Leinwandbereiche werden generiert.
+	A 16:9 canvas at the original image size exceeds the 2048-pixel limit.	Eine 16:9-Leinwand in Originalgröße überschreitet die Grenze von 2048 Pixeln.
+	Increase at least one dimension without reducing the original image.	Vergrößere mindestens eine Abmessung, ohne das Originalbild zu verkleinern.
+	API charges may apply. Canvas expansion and the new layer form one undo step.	Es können API-Kosten entstehen. Leinwanderweiterung und neue Ebene bilden einen Undo-Schritt.
+	Remember last text per AI dialog	Letzten Text pro KI-Dialog merken
+	Turning this off clears the saved AI texts.	Beim Ausschalten werden die gespeicherten KI-Texte gelöscht.
