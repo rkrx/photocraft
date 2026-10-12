@@ -6,18 +6,22 @@ PhotoCraft follows the same conventions as FilmCraft #28. Start a headless sessi
 photocraft-cli mcp --automation-read-root /work/project --automation-write-root /work/project
 ```
 
-Paths are relative to the corresponding root; without a root that filesystem authority is
-absent. Bridge mode uses `--bridge` and `--control-token-file` as described in
-[development.md](development.md). UI tools require a running desktop app.
+Paths are relative to the corresponding root, or absolute paths beneath it; without a root that
+filesystem authority is absent. Bridge mode uses `--bridge` and `--control-token-file` as
+described in [development.md](development.md). UI tools require a running desktop app.
 
 ## Tools and resources
 
 - `command_list`: discover engine ids, parameter docs and current enabled state; accepts
   `filter` and `enabled_only`.
 - `command_run`: `id`, optional `params` and `wait`. Command parameters remain engine-defined.
-- `command_batch`: ordered `steps`, optional `stop_on_error`; one history step per command,
-  not an atomic transaction. Existing per-step results and reply budgets are preserved.
+- `command_batch`: ordered `steps`, optional `stop_on_error` (default true); stops at the first
+  error unless false. Not an atomic transaction: earlier successful steps stay applied, with
+  no rollback. Existing per-step results and reply budgets are preserved.
 - `doc_inspect`: layer tree, history and selection; an empty session returns `document:null`.
+  Every layer (including groups and nested children) reports raster-only `hasMask`,
+  `hasVectorMask` for vector mask presence, and `vectorMaskEnabled` (`true`/`false` when
+  present, `null` when absent). A disabled vector mask still has `hasVectorMask:true`.
 - `render_preview`: bounded PNG content; `index` and `max_side` (default 1024, maximum 2048).
 - `ui_inspect` and `ui_screenshot`: live app state/window in bridge mode.
 
@@ -26,11 +30,32 @@ Existing document/session/job/UI tools remain listed, including the documented
 and all four annotation hints. Generic command/control tools conservatively advertise writes;
 file saves may replace existing targets. Hints do not grant permission.
 
+After a failed batch, `completed` and per-step `results` report successful steps, not a
+rolled-back transaction. Inspect the document and its history with `doc_inspect`; commands
+do not necessarily add one history entry each. For undoable edits, use `command_run` with
+`{"id":"edit.undo","params":{}}` once per undoable history entry added, inspecting history
+as you recover. Undo does not roll back files written to disk. If a reply-budget error says
+the current step may have completed, inspect its effects before retrying or undoing it.
+
+Before experiments, use `command_run` with `image.duplicate` and `{}` params, or
+`history.newDocument` and `{}` params (copies the current state by default). Both create a
+new active document, leaving the source unchanged; run experimental edits on that copy.
+The optional `state` parameter of `history.newDocument` selects a retained historical state.
+
 Unknown tool arguments return JSON-RPC `-32602`, naming the key, before execution. Batch
 step envelopes are strict too. Nested engine `params` retain their command-specific handling.
 Tool execution failures return `isError:true`. A worker panic becomes a tool error and the
 existing poisoned-session recovery keeps serving. Invalid JSON lines receive `-32700` with
 `id:null`; the next line is still processed.
+
+Embedded Smart Objects support `command_run` with `layer.smartObjects.editContents` and
+`layer.smartObjects.convertToLayers`, optionally targeting `params.layer`. Use
+`layer.smartObjects.saveContents` in an opened contents document to update its parent in memory;
+save nested contents from the inside outward, then `doc_save` the parent to a scoped path.
+`doc_save` on a contents document exports that document rather than updating its parent.
+No filesystem root is needed for the in-memory commands. External linked sources that require
+a file read remain refused. See the [control policy](control-protocol.md#engine-commands)
+for the shared restrictions.
 
 `photocraft://document` and `photocraft://commands` return live JSON matching `doc_inspect`
 and `command_list`. Resource reads are uncached; tool/resource catalogs are private and cached

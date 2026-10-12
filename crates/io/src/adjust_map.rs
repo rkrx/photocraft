@@ -11,7 +11,7 @@
 //! stay [`Adjustment::Unsupported`] and are written back verbatim.
 
 use photocraft_doc::Adjustment;
-use photocraft_doc::adjust::{CurvePoint, HueRange, LevelsChannel, ToneSpace};
+use photocraft_doc::adjust::{CURVE_MAP_LEN, CurvePoint, HueRange, LevelsChannel, ToneSpace, curve_map, curve_map_outputs};
 use photocraft_psd::descriptor::{Descriptor, Value, VersionedDescriptor};
 
 /// All PSD adjustment keys recognized as adjustment layers.
@@ -43,7 +43,9 @@ fn levels_rec(d: &[u8], at: usize) -> Option<LevelsChannel> {
 }
 
 fn parse_curves(d: &[u8]) -> Option<Adjustment> {
-    // pad(1) version(2) bitmap(4)
+    // map flag(1) version(2) bitmap(4). A map (Photoshop's pencil-drawn curves) stores 256 output
+    // bytes per channel instead of a point list (psd-tools reads the flag as `is_map`).
+    let pencil = *d.first()? != 0;
     let version = be16(d, 1)?;
     if version != 1 && version != 4 {
         return None;
@@ -54,6 +56,14 @@ fn parse_curves(d: &[u8]) -> Option<Adjustment> {
     let mut curves: Vec<Vec<CurvePoint>> = vec![line(), line(), line(), line(), line()];
     for bit in 0..32usize {
         if bits & (1 << bit) == 0 {
+            continue;
+        }
+        if pencil {
+            let map = d.get(at..at + CURVE_MAP_LEN)?;
+            at += CURVE_MAP_LEN;
+            if let Some(slot) = curves.get_mut(bit) {
+                *slot = curve_map(&map.iter().map(|&b| f32::from(b) / 255.0).collect::<Vec<_>>());
+            }
             continue;
         }
         let n = usize::from(be16(d, at)?);
@@ -72,7 +82,7 @@ fn parse_curves(d: &[u8]) -> Option<Adjustment> {
     let mut it = curves.into_iter();
     let master = it.next()?;
     let (r, g, b, k) = (it.next()?, it.next()?, it.next()?, it.next()?);
-    Some(Adjustment::Curves { master, per_channel: [r, g, b], space: ToneSpace::Rgb, black: k })
+    Some(Adjustment::Curves { master, per_channel: [r, g, b], space: ToneSpace::Rgb, black: k, pencil })
 }
 
 fn desc_num(d: &Descriptor, key: &str) -> Option<f32> {
@@ -104,6 +114,38 @@ pub enum Channels {
     Lab,
     /// Channel records do not map to display channels (multichannel, indexed…); ignored.
     Other,
+}
+
+/// The menu name of the adjustment a PSD key holds (for messages).
+pub fn label(key: &[u8; 4]) -> &'static str {
+    match key {
+        b"levl" => "Levels",
+        b"curv" => "Curves",
+        b"hue2" => "Hue/Saturation",
+        b"brit" => "Brightness/Contrast",
+        b"nvrt" => "Invert",
+        b"thrs" => "Threshold",
+        b"post" => "Posterize",
+        b"expA" => "Exposure",
+        b"vibA" => "Vibrance",
+        b"blnc" => "Color Balance",
+        b"mixr" => "Channel Mixer",
+        b"grdm" => "Gradient Map",
+        b"phfl" => "Photo Filter",
+        b"selc" => "Selective Color",
+        b"blwh" => "Black & White",
+        b"clrL" => "Color Lookup",
+        _ => "adjustment",
+    }
+}
+
+/// Why [`parse`] keeps a block as [`Adjustment::Unsupported`], when there is more to say than
+/// "it could not be read" (so far: Color Lookup).
+pub fn unreadable_reason(key: &[u8; 4], data: &[u8]) -> Option<String> {
+    match key {
+        b"clrL" => read_lookup(data).err(),
+        _ => None,
+    }
 }
 
 /// Parses an adjustment block. `cged` is the optional `CgEd` block data
@@ -346,23 +388,31 @@ fn desc_enum<'a>(d: &'a Descriptor, key: &str) -> Option<&'a [u8]> {
 /// the format named by `LUTFormat`). Profile-based lookups (abstract / device link) have no
 /// table and stay [`Adjustment::Unsupported`].
 fn parse_lookup(d: &[u8]) -> Option<Adjustment> {
-    if be16(d, 0)? != 1 {
-        return None;
+    read_lookup(d).ok()
+}
+
+/// [`parse_lookup`] with the reason a block can't be read.
+fn read_lookup(d: &[u8]) -> Result<Adjustment, String> {
+    match be16(d, 0) {
+        Some(1) => {}
+        Some(v) => return Err(format!("unknown version {v}")),
+        None => return Err("the block is truncated".into()),
     }
-    let (v, _) = VersionedDescriptor::parse_prefix(d.get(2..)?).ok()?;
+    let (v, _) = VersionedDescriptor::parse_prefix(d.get(2..).unwrap_or_default()).map_err(|e| format!("unreadable settings ({e})"))?;
     let desc = v.descriptor;
-    let bytes = match desc.get("LUT3DFileData")? {
-        Value::RawData(b) if !b.is_empty() => b,
-        _ => return None,
+    let bytes = match desc.get("LUT3DFileData") {
+        Some(Value::RawData(b)) if !b.is_empty() => b,
+        Some(_) => return Err("its LUT data is empty".into()),
+        None => return Err("it uses a colour profile (abstract or device link), not a LUT file, which isn't supported yet".into()),
     };
-    let ext = match desc_enum(&desc, "LUTFormat") {
-        Some(b"LUTFormat3DL") => "x.3dl",
-        Some(b"LUTFormatLOOK") => "x.look",
-        _ => "x.cube",
+    let (ext, format) = match desc_enum(&desc, "LUTFormat") {
+        Some(b"LUTFormat3DL") => ("x.3dl", "3DL"),
+        Some(b"LUTFormatLOOK") => ("x.look", "LOOK"),
+        _ => ("x.cube", "CUBE"),
     };
-    let lut = photocraft_cms::lutfile::parse(ext, bytes).ok()?;
+    let lut = photocraft_cms::lutfile::parse(ext, bytes).map_err(|e| format!("its {format} LUT can't be read ({e})"))?;
     let name = desc_text(&desc, "LUT3DFileName").or_else(|| desc_text(&desc, "NM  ")).unwrap_or_default();
-    Some(Adjustment::ColorLookup {
+    Ok(Adjustment::ColorLookup {
         name,
         size: lut.size as u32,
         lut: Some(std::sync::Arc::new(lut.data)),
@@ -576,12 +626,16 @@ pub fn write(adj: &Adjustment) -> Vec<([u8; 4], Vec<u8>)> {
             }
             return vec![(*b"levl", v)];
         }
-        Adjustment::Curves { master, per_channel, space, black } => {
-            v.push(0);
+        Adjustment::Curves { master, per_channel, space, black, pencil } => {
+            v.push(u8::from(*pencil));
             put16(&mut v, 1);
             let ink = *space == ToneSpace::Cmyk && black.len() >= 2;
             v.extend_from_slice(&(if ink { 0b11111u32 } else { 0b1111 }).to_be_bytes());
             for c in std::iter::once(master).chain(per_channel.iter()).chain(ink.then_some(black)) {
+                if *pencil {
+                    v.extend(curve_map_outputs(c).iter().map(|&o| u8::try_from(q255(o)).unwrap_or(u8::MAX)));
+                    continue;
+                }
                 put16(&mut v, c.len().min(19) as u16);
                 for p in c.iter().take(19) {
                     put16(&mut v, q255(p.output));
@@ -748,6 +802,28 @@ mod tests {
         assert!(matches!(parse(b"grdm", &[0, 1, 0, 0, 0, 0, 0, 0, 0, 0], None, Channels::Rgb), Adjustment::Unsupported { .. }));
     }
 
+    #[test]
+    fn pencil_curves_read_and_write_the_map_form() {
+        // Photoshop's pencil-drawn curves: map flag 1, then 256 output bytes per channel.
+        let mut block = vec![1, 0, 1, 0, 0, 0, 0b1111];
+        let maps: [Vec<u8>; 4] = [
+            (0..=255u8).rev().collect(),
+            (0..=255u8).map(|k| if k < 128 { 0 } else { 255 }).collect(),
+            (0..=255u8).collect(),
+            (0..=255u8).map(|k| k / 2).collect(),
+        ];
+        for m in &maps {
+            block.extend_from_slice(m);
+        }
+        let a = parse(b"curv", &block, None, Channels::Rgb);
+        let Adjustment::Curves { master, per_channel, pencil, .. } = &a else { panic!("{a:?}") };
+        assert!(*pencil);
+        assert_eq!(master.len(), CURVE_MAP_LEN);
+        assert_eq!((master[0].output, master[255].output), (1.0, 0.0));
+        assert_eq!((per_channel[0][127].output, per_channel[0][128].output), (0.0, 1.0));
+        assert_eq!(write(&a)[0].1, block);
+    }
+
     fn rt(a: Adjustment) {
         let blocks = write(&a);
         assert!(!blocks.is_empty(), "{a:?}");
@@ -783,6 +859,7 @@ mod tests {
             per_channel: [pts(&[(0, 10), (255, 255)]), pts(&[(0, 0), (255, 245)]), pts(&[(0, 0), (64, 32), (255, 255)])],
             space: ToneSpace::Rgb,
             black: Vec::new(),
+            pencil: false,
         });
         // CMYK ink curves and levels keep their black record.
         let ink = Adjustment::Curves {
@@ -790,6 +867,7 @@ mod tests {
             per_channel: [pts(&[(0, 0), (255, 255)]), pts(&[(0, 30), (255, 255)]), pts(&[(0, 0), (255, 255)])],
             space: ToneSpace::Cmyk,
             black: pts(&[(0, 0), (128, 100), (255, 255)]),
+            pencil: false,
         };
         let b = write(&ink);
         assert_eq!(parse(&b[0].0, &b[0].1, None, Channels::Cmyk), ink);
@@ -860,6 +938,18 @@ mod tests {
         let mut p = vec![0, 1];
         p.extend(VersionedDescriptor::new(Descriptor::new("null").with("lookupType", en("colorLookupType", "abstractProfile"))).to_bytes());
         assert!(matches!(parse(b"clrL", &p, None, Channels::Rgb), Adjustment::Unsupported { .. }));
+        // Each way a lookup can't be read has a reason for the import warning (#1763).
+        assert_eq!(unreadable_reason(b"clrL", &d), None);
+        assert!(unreadable_reason(b"clrL", &p).unwrap().contains("colour profile"));
+        assert!(unreadable_reason(b"clrL", &[0]).unwrap().contains("truncated"));
+        assert!(unreadable_reason(b"clrL", &[0, 2, 0, 0]).unwrap().contains("version 2"));
+        assert!(unreadable_reason(b"clrL", &[0, 1, 9]).unwrap().contains("unreadable settings"));
+        let bad = Descriptor::new("null").with("LUTFormat", en("LUTFormatType", "LUTFormat3DL")).with("LUT3DFileData", Value::RawData(b"not a lut".to_vec()));
+        let mut b = vec![0, 1];
+        b.extend(VersionedDescriptor::new(bad).to_bytes());
+        assert!(matches!(parse(b"clrL", &b, None, Channels::Rgb), Adjustment::Unsupported { .. }));
+        assert!(unreadable_reason(b"clrL", &b).unwrap().contains("3DL LUT can't be read"), "{:?}", unreadable_reason(b"clrL", &b));
+        assert_eq!(label(b"clrL"), "Color Lookup");
         assert!(matches!(parse(b"clrL", &[0, 1, 9], None, Channels::Rgb), Adjustment::Unsupported { .. }));
         assert!(matches!(parse(b"selc", &[0, 1, 0, 0], None, Channels::Rgb), Adjustment::Unsupported { .. }));
     }

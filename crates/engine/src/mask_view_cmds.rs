@@ -112,6 +112,8 @@ fn set_view(s: &mut Session, p: &Value) -> Result<Value> {
     let applies = next.is_some() || st.channel_view.layer_mask.is_some_and(|v| v.layer == layer);
     if applies && st.channel_view.layer_mask != next {
         st.channel_view.layer_mask = next;
+        // Hiding the mask while every colour channel is off would leave a blank canvas.
+        crate::channel_cmds::fix_view(st);
         // A view change: redraw without recompositing, and keep a clean document clean.
         let clean = st.saved_revision == st.revision;
         st.revision += 1;
@@ -158,7 +160,7 @@ pub fn specs() -> Vec<CommandSpec> {
             label: "Toggle Layer Mask Overlay",
             menu: &[],
             shortcut: Some("\\"),
-            params: r##"{"layer":id?} (shows or hides the active layer's mask as a 50% red rubylith over the composite, Photoshop's `\` key; view state, not an undo step; painting while shown paints the mask)"##,
+            params: r##"{"layer":id?} (shows or hides the active layer's mask as a 50% red rubylith over the composite, the `\` key; view state, not an undo step; painting while shown paints the mask)"##,
             enabled: active_has_mask,
             run: toggle_overlay,
             journal: false,

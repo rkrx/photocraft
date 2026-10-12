@@ -58,7 +58,24 @@ pub enum Contour {
     #[default]
     Linear,
     /// Custom curve (input → output), both `0..=1`.
-    Custom { name: String, points: Vec<CurvePoint> },
+    Custom {
+        name: String,
+        points: Vec<CurvePoint>,
+        /// Corner (non-continuous) flags, parallel to `points`: the curve bends sharply at a
+        /// corner point instead of passing smoothly through it. Missing entries are smooth.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        corners: Vec<bool>,
+    },
+}
+
+impl Contour {
+    /// Whether point `i` of a custom contour is a corner.
+    pub fn is_corner(&self, i: usize) -> bool {
+        match self {
+            Contour::Linear => false,
+            Contour::Custom { corners, .. } => corners.get(i).copied().unwrap_or(false),
+        }
+    }
 }
 
 /// Paint used by strokes and glows.
@@ -276,6 +293,31 @@ pub enum Effect {
 }
 
 impl Effect {
+    /// This effect with its colours in `mode`'s model ([`Color::in_mode`]): a layer's effect
+    /// colours are in its document's mode, as Image › Mode keeps them.
+    pub fn in_mode(mut self, mode: photocraft_color::ColorMode) -> Effect {
+        let cc = |c: &mut Color| *c = c.in_mode(mode);
+        let paint = |p: &mut FxPaint| match p {
+            FxPaint::Color(c) => cc(c),
+            FxPaint::Gradient(g) => g.stops.iter_mut().for_each(|s| cc(&mut s.1)),
+            FxPaint::Pattern { .. } => {}
+        };
+        match &mut self {
+            Effect::DropShadow(s) | Effect::InnerShadow(s) => cc(&mut s.color),
+            Effect::OuterGlow(g) | Effect::InnerGlow(g) => paint(&mut g.paint),
+            Effect::Stroke(s) => paint(&mut s.paint),
+            Effect::ColorOverlay { color, .. } => cc(color),
+            Effect::GradientOverlay { gradient, .. } => gradient.stops.iter_mut().for_each(|s| cc(&mut s.1)),
+            Effect::Satin(s) => cc(&mut s.color),
+            Effect::BevelEmboss(b) => {
+                cc(&mut b.highlight_color);
+                cc(&mut b.shadow_color);
+            }
+            Effect::PatternOverlay { .. } => {}
+        }
+        self
+    }
+
     /// Whether this instance is switched on.
     pub fn enabled(&self) -> bool {
         match self {

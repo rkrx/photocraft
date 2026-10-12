@@ -26,6 +26,7 @@ pub mod camera_raw;
 pub mod color_to_alpha;
 pub mod content_aware;
 mod denoise;
+pub mod direct;
 mod distort;
 mod distort2;
 pub mod erase;
@@ -42,11 +43,13 @@ pub mod liquify;
 pub mod magnetic;
 pub mod matting;
 mod noise;
+pub mod nonlocal;
 mod oil;
 mod other;
 mod other2;
 pub mod paint;
 pub mod panorama;
+mod par;
 pub mod perspective;
 mod photo_util;
 mod pixelate;
@@ -56,6 +59,7 @@ pub mod pyramid;
 pub mod quantize;
 pub mod redeye;
 mod relight;
+pub mod remove;
 mod render;
 pub mod render2;
 pub mod resample;
@@ -983,6 +987,24 @@ pub fn apply_tiled_with(
     extent: Option<Rect>,
     ctl: &photocraft_raster::Interrupt,
 ) -> Option<Surface> {
+    apply_tiled_with_impl(surface, params, area, bounds, selection, tile, extent, ctl, true)
+}
+
+#[allow(clippy::too_many_arguments)]
+fn apply_tiled_with_impl(
+    surface: &Surface,
+    params: &FilterParams,
+    area: Rect,
+    bounds: Rect,
+    selection: Option<&Surface>,
+    tile: i32,
+    extent: Option<Rect>,
+    ctl: &photocraft_raster::Interrupt,
+    prepare_radial: bool,
+) -> Option<Surface> {
+    if ctl.cancelled() {
+        return None;
+    }
     let mut out = surface.clone();
     if area.is_empty() {
         return Some(out);
@@ -998,6 +1020,18 @@ pub fn apply_tiled_with(
     let tile = if matches!(params, FilterParams::ShapeBlur { .. }) { tile.clamp(1, 2048) } else { tile };
     let fmt = surface.format();
     let ctx = Ctx { bounds, mode: fmt.mode, alpha: fmt.alpha };
+    // Prepare the immutable sample transforms once for all output tiles. If the
+    // optional table allocation fails, use the existing sampler; only a real
+    // cancellation returns None. Source reads keep their upstream semantics.
+    let radial = match params {
+        FilterParams::RadialBlur { amount, method, quality, center_x, center_y } if prepare_radial => {
+            blur::radial::Plan::for_area(bounds, *amount, *method, *quality, (*center_x, *center_y), area, ctl)
+        }
+        _ => None,
+    };
+    if ctl.cancelled() {
+        return None;
+    }
     let halo = params.halo_for(bounds);
     let shared = (halo == Halo::Bounds).then(|| Image::read(surface, bounds.union(&area)));
     // Shape rasterization depends only on params, not on a tile's pixels.
@@ -1049,9 +1083,14 @@ pub fn apply_tiled_with(
                 &owned
             }
         };
-        let Some(mut data) = (match &shape {
-            Some(shape) => shape.checked_run(src, *t, &ctx),
-            None => Some(kernel(params, src, *t, &ctx)),
+        let Some(mut data) = (match (&shape, &radial) {
+            (Some(shape), _) => shape.checked_run(src, *t, &ctx),
+            (None, Some(plan)) => match plan.filter(src, *t, &ctx, ctl) {
+                Some(data) => Some(data),
+                None if ctl.cancelled() => None,
+                None => Some(kernel(params, src, *t, &ctx)),
+            },
+            (None, None) => Some(kernel(params, src, *t, &ctx)),
         }) else {
             return (*t, Vec::new());
         };
@@ -1189,3 +1228,18 @@ mod tests_ext;
 
 #[cfg(test)]
 mod tests_mosaic;
+
+/// The current upstream sampler through the identical source/selection/tile pipeline.
+#[cfg(test)]
+#[allow(clippy::too_many_arguments)]
+fn apply_radial_reference(
+    surface: &Surface,
+    params: &FilterParams,
+    area: Rect,
+    bounds: Rect,
+    selection: Option<&Surface>,
+    extent: Rect,
+    ctl: &photocraft_raster::Interrupt,
+) -> Option<Surface> {
+    apply_tiled_with_impl(surface, params, area.intersect(&extent), bounds, selection, auto_tile(params, bounds), Some(extent), ctl, false)
+}

@@ -31,6 +31,18 @@
         DowngradeErrorMessage="A newer version of PhotoCraft is already installed." />
     <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
 
+    <!-- Windows 10 or later. The Rust standard library has needed it since 1.78: on Windows 7 and
+         8 the app fails at launch with "The procedure entry point ProcessPrng could not be located
+         in bcryptprimitives.dll" (#2310), so the installer says so instead of installing it.
+         `CurrentMajorVersionNumber` exists only from Windows 10 on, in the 32- and 64-bit
+         registry views alike; MSI's own VersionNT has reported both 603 and 1000 there.
+         `Installed` keeps repair and uninstall working on any Windows. -->
+    <Property Id="WINDOWS10ORLATER" Secure="yes">
+      <RegistrySearch Id="WindowsMajorVersion" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion"
+          Name="CurrentMajorVersionNumber" Type="raw" />
+    </Property>
+    <Launch Condition="Installed OR WINDOWS10ORLATER" Message="!(loc.RequiresWindows10)" />
+
     <!-- MSI caches this icon using its Id as the filename. Advertised shortcuts to an
          .exe need an .exe icon identifier (ICE50), even when the source is an ICO. -->
     <Icon Id="PhotocraftIcon.exe" SourceFile="$(var.IconPath)" />
@@ -95,12 +107,14 @@
           </Extension>
         </ProgId>
         <!-- PSD/PSB and images: offered under "Open with", never forced as the default. -->
-        <ProgId Id="Photocraft.PhotoshopDocument" Description="Photoshop Document" Icon="PhotocraftExe" IconIndex="0" />
+        <ProgId Id="Photocraft.PhotoshopDocument" Description="PSD Document" Icon="PhotocraftExe" IconIndex="0" />
         <RegistryValue Root="HKLM" Key="Software\Classes\Photocraft.PhotoshopDocument\shell\open\command" Value="&quot;[#PhotocraftExe]&quot; &quot;%1&quot;" Type="string" />
         <ProgId Id="Photocraft.Image" Description="Image" Icon="PhotocraftExe" IconIndex="0" />
         <RegistryValue Root="HKLM" Key="Software\Classes\Photocraft.Image\shell\open\command" Value="&quot;[#PhotocraftExe]&quot; &quot;%1&quot;" Type="string" />
         <RegistryValue Root="HKLM" Key="Software\Classes\.psd\OpenWithProgids" Name="Photocraft.PhotoshopDocument" Value="" Type="string" />
         <RegistryValue Root="HKLM" Key="Software\Classes\.psb\OpenWithProgids" Name="Photocraft.PhotoshopDocument" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\.pdn\OpenWithProgids" Name="Photocraft.Image" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\.ora\OpenWithProgids" Name="Photocraft.Image" Value="" Type="string" />
         <RegistryValue Root="HKLM" Key="Software\Classes\.png\OpenWithProgids" Name="Photocraft.Image" Value="" Type="string" />
         <RegistryValue Root="HKLM" Key="Software\Classes\.jpg\OpenWithProgids" Name="Photocraft.Image" Value="" Type="string" />
         <RegistryValue Root="HKLM" Key="Software\Classes\.jpeg\OpenWithProgids" Name="Photocraft.Image" Value="" Type="string" />
@@ -122,6 +136,8 @@
         <RegistryValue Root="HKLM" Key="Software\Classes\Applications\photocraft.exe\SupportedTypes" Name=".pcraft" Value="" Type="string" />
         <RegistryValue Root="HKLM" Key="Software\Classes\Applications\photocraft.exe\SupportedTypes" Name=".psd" Value="" Type="string" />
         <RegistryValue Root="HKLM" Key="Software\Classes\Applications\photocraft.exe\SupportedTypes" Name=".psb" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\photocraft.exe\SupportedTypes" Name=".pdn" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\photocraft.exe\SupportedTypes" Name=".ora" Value="" Type="string" />
         <RegistryValue Root="HKLM" Key="Software\Classes\Applications\photocraft.exe\SupportedTypes" Name=".png" Value="" Type="string" />
         <RegistryValue Root="HKLM" Key="Software\Classes\Applications\photocraft.exe\SupportedTypes" Name=".jpg" Value="" Type="string" />
         <RegistryValue Root="HKLM" Key="Software\Classes\Applications\photocraft.exe\SupportedTypes" Name=".jpeg" Value="" Type="string" />
