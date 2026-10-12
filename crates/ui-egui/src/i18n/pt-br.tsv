@@ -3863,3 +3863,43 @@ layerLabel	No Color	Sem cor
 	API charges may apply. Canvas expansion and the new layer form one undo step.	Podem ser aplicadas cobranças de API. A expansão da tela e a nova camada formam uma única etapa de desfazer.
 	Remember last text per AI dialog	Lembrar o último texto de cada diálogo de IA
 	Turning this off clears the saved AI texts.	Desativar esta opção apaga os textos de IA salvos.
+
+# Generative geometry, quality and explicit offline diagnostics
+	Generation diagnostics…	Diagnóstico de geração…
+	Generation quality	Qualidade de geração
+	Higher quality does not guarantee better transitions.	Qualidade maior não garante transições melhores.
+	API output	Saída da API
+	Working size is calculated locally and sent explicitly.	O tamanho de trabalho é calculado localmente e enviado explicitamente.
+	Working edge limit (pixels)	Limite da borda de trabalho (pixels)
+	Local processing	Processamento local
+	Check preserved context alignment	Verificar alinhamento do contexto preservado
+	Correct reliable small translations	Corrigir pequenos deslocamentos confiáveis
+	Maximum translation (working pixels)	Deslocamento máximo (pixels de trabalho)
+	Transition width (document pixels)	Largura da transição (pixels do documento)
+	Match boundary color (experimental)	Ajustar cor da borda (experimental)
+	Keep diagnostics for explicit export	Manter diagnóstico para exportação explícita
+	Diagnostics contain images and prompts. Nothing is exported automatically.	O diagnóstico contém imagens e textos. Nada é exportado automaticamente.
+	Working surface	Superfície de trabalho
+	Export diagnostics…	Exportar diagnóstico…
+	Import diagnostics…	Importar diagnóstico…
+	Replay offline	Reprocessar offline
+	Document source	Origem do documento
+	Transmitted source	Origem transmitida
+	Generation mask (alpha)	Máscara de geração (alfa)
+	Unmodified response	Resposta sem alterações
+	Mapped result	Resultado remapeado
+	Insertion mask (alpha)	Máscara de inserção (alfa)
+	Final result	Resultado final
+	No diagnostic capture. Enable diagnostics before generating, or import a capture.	Nenhum diagnóstico. Ative antes de gerar ou importe um diagnóstico.
+	Plausible	Plausível
+	Translation corrected	Deslocamento corrigido
+	Translation requires correction	O deslocamento requer correção
+	Geometric deviation	Desvio geométrico
+	Insufficient context	Contexto insuficiente
+	Disabled	Desativado
+	Transparent areas are editable; opaque areas are protected.	Áreas transparentes são editáveis; áreas opacas são protegidas.
+	Result applied	Resultado aplicado
+	Preview only	Somente prévia
+	Diagnostics saved to {path}.	Diagnóstico salvo em {path}.
+	Diagnostic file picker is unavailable.	O seletor de arquivos de diagnóstico está indisponível.
+	Apply the diagnostic setting before generating. Earlier attempts were not retained.	Aplique a configuração de diagnóstico antes de gerar. As tentativas anteriores não foram retidas.

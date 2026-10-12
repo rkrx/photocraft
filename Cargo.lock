@@ -4375,6 +4375,7 @@ version = "0.7.0"
 dependencies = [
  "base64 0.22.1",
  "photocraft-ai",
+ "photocraft-codecs",
  "reqwest",
  "serde_json",
 ]
@@ -4418,6 +4419,7 @@ dependencies = [
 name = "photocraft-cli"
 version = "0.7.0"
 dependencies = [
+ "photocraft-ai",
  "photocraft-ai-openai",
  "photocraft-automation",
  "photocraft-codecs",

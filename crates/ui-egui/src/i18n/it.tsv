@@ -2746,3 +2746,44 @@ curves	Smooth	Leviga
 	API charges may apply. Canvas expansion and the new layer form one undo step.	Potrebbero essere addebitati costi API. L’espansione del quadro e il nuovo livello formano un unico passaggio di annullamento.
 	Remember last text per AI dialog	Ricorda l’ultimo testo per ogni finestra IA
 	Turning this off clears the saved AI texts.	Disattivando questa opzione si cancellano i testi IA salvati.
+
+# Generative geometry, quality and explicit offline diagnostics
+	Generation diagnostics…	Diagnostica generazione…
+	Generation quality	Qualità generazione
+	Higher quality does not guarantee better transitions.	Una qualità maggiore non garantisce transizioni migliori.
+	API output	Output API
+	Working size is calculated locally and sent explicitly.	La dimensione di lavoro viene calcolata localmente e inviata esplicitamente.
+	Working edge limit (pixels)	Limite lato di lavoro (pixel)
+	Local processing	Elaborazione locale
+	Check preserved context alignment	Verifica allineamento del contesto preservato
+	Correct reliable small translations	Correggi piccoli spostamenti affidabili
+	Maximum translation (working pixels)	Spostamento massimo (pixel di lavoro)
+	Transition width (document pixels)	Larghezza transizione (pixel documento)
+	Match boundary color (experimental)	Adatta colore del bordo (sperimentale)
+	Keep diagnostics for explicit export	Conserva diagnostica per esportazione esplicita
+	Diagnostics contain images and prompts. Nothing is exported automatically.	La diagnostica contiene immagini e testi. Nessuna esportazione automatica.
+	Working surface	Superficie di lavoro
+	Export diagnostics…	Esporta diagnostica…
+	Import diagnostics…	Importa diagnostica…
+	Replay offline	Rielabora offline
+	Alignment	Allineamento
+	Document source	Origine del documento
+	Transmitted source	Origine trasmessa
+	Generation mask (alpha)	Maschera generazione (alfa)
+	Unmodified response	Risposta non modificata
+	Mapped result	Risultato rimappato
+	Insertion mask (alpha)	Maschera inserimento (alfa)
+	Final result	Risultato finale
+	No diagnostic capture. Enable diagnostics before generating, or import a capture.	Nessuna diagnostica. Attivala prima di generare oppure importane una.
+	Plausible	Plausibile
+	Translation corrected	Spostamento corretto
+	Translation requires correction	Lo spostamento richiede correzione
+	Geometric deviation	Deviazione geometrica
+	Insufficient context	Contesto insufficiente
+	Disabled	Disattivato
+	Transparent areas are editable; opaque areas are protected.	Le aree trasparenti sono modificabili; quelle opache sono protette.
+	Result applied	Risultato applicato
+	Preview only	Solo anteprima
+	Diagnostics saved to {path}.	Diagnostica salvata in {path}.
+	Diagnostic file picker is unavailable.	Il selettore dei file di diagnostica non è disponibile.
+	Apply the diagnostic setting before generating. Earlier attempts were not retained.	Applica l’impostazione diagnostica prima di generare. I tentativi precedenti non sono stati conservati.

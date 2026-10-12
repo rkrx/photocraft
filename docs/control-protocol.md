@@ -579,3 +579,16 @@ dock target. The panel menu and icon rail remain
 available in custom workspaces. `window.panel.<id> {show:true}` always reveals, selects
 and expands the panel, including when another tab is selected. Workspace snapshots
 retain custom collapse settings and Timeline visibility.
+
+## Generative diagnostics
+
+`engine.execute` supports `ai.diagnostics` (`{clear:true}` releases the opt-in capture),
+`ai.replay` (`{capture?,local?}` processes a saved response offline, without document mutation),
+and `ai.comparison` (identical high/xhigh request pair; no network).
+Shell commands `ai.diagnostics.show`, `ai.diagnostics.export {path}` and
+`ai.diagnostics.import {path}` use the normal inspectable dialog and capability-scoped
+read/write services. A diagnostic dialog exposes only its stage selector in `ui.inspect`;
+image/prompt data is obtained only by the explicit diagnostic command/export.
+Settings drafts expose `advanced` through `ui.dialog.set`. Typed settings live under
+`integrations.imageOptions` and `integrations.imageProcessing`; changes affect following jobs.
+See [Generative AI](generative-ai.md#explicit-diagnostics-and-offline-processing) for limits and examples.

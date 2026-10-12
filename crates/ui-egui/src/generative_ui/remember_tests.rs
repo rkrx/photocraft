@@ -20,7 +20,11 @@ impl photocraft_ai::Backend for Paint {
         )
         .unwrap();
         let png = photocraft_codecs::encode(&image, photocraft_codecs::Format::Png, &Default::default()).unwrap();
-        Ok(photocraft_ai::Response { version: photocraft_ai::VERSION, image: photocraft_ai::PngImage::from_bytes(image.width(), image.height(), &png)? })
+        Ok(photocraft_ai::Response {
+            quality: None,
+            version: photocraft_ai::VERSION,
+            image: photocraft_ai::PngImage::from_bytes(image.width(), image.height(), &png)?,
+        })
     }
 }
 

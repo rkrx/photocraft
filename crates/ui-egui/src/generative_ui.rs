@@ -75,7 +75,9 @@ pub fn open(app: &mut PhotocraftApp, command: &str) -> Result<u64, String> {
 
 /// Runtime credentials for Preferences › Integrations; the model uses normal preferences.
 pub fn settings_body(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
-    ui.small(tl!("Turning this off clears the saved AI texts."));
+    if crate::widgets::secondary_button(ui, tl!("Generation diagnostics…"), 200.0).clicked() {
+        crate::generative_diagnostics_ui::open(app);
+    }
     let backend = provider_name(app);
     ui.label(crate::i18n::fmt(tl!("Image provider: {provider}"), &[("provider", backend)]));
     if app.services.generative_backend.is_some() {
@@ -87,6 +89,81 @@ pub fn settings_body(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
     } else if app.session.generative_backend.is_none() {
         ui.label(tl!("No image provider installed. Use the desktop app or configure a backend."));
     }
+}
+
+/// The normal Preferences draft, so Apply/OK/Cancel and persistence are shared with all settings.
+pub fn options_body(ui: &mut egui::Ui, obj: &mut Map<String, Value>, fields: &mut Map<String, Value>) {
+    let mut api: photocraft_ai::ApiOptions = serde_json::from_value(obj.get("imageOptions").cloned().unwrap_or(Value::Null)).unwrap_or_default();
+    let mut local: photocraft_engine::generative_pipeline::LocalOptions =
+        serde_json::from_value(obj.get("imageProcessing").cloned().unwrap_or(Value::Null)).unwrap_or_default();
+    ui.label(tl!("Model"));
+    let mut selected_model = obj.get("imageModel").and_then(Value::as_str).unwrap_or(photocraft_ai::DEFAULT_MODEL).to_string();
+    let mut models: Vec<(String, &str)> = [
+        "gpt-image-2.5-sunburst",
+        "gpt-image-2.5-flare",
+        "gpt-image-2.5-sunburst-2026-09-08",
+        "gpt-image-2.5-flare-2026-09-08",
+        "gpt-image-2",
+        "gpt-image-2-2026-04-21",
+        "gpt-image-1.5",
+        "gpt-image-1",
+        "gpt-image-1-mini",
+    ]
+    .into_iter()
+    .map(|m| (m.to_string(), m))
+    .collect();
+    let custom = selected_model.clone();
+    if !models.iter().any(|(m, _)| m == &selected_model) {
+        models.push((custom.clone(), &custom));
+    }
+    crate::widgets::dropdown(ui, "generation-model", &mut selected_model, &models, 300.0);
+    obj.insert("imageModel".into(), json!(selected_model));
+    ui.label(tl!("Generation quality"));
+    let model = obj.get("imageModel").and_then(Value::as_str).unwrap_or(photocraft_ai::DEFAULT_MODEL);
+    let extended = photocraft_ai::Capabilities::for_model(model).is_some_and(|caps| caps.extended_quality);
+    let mut quality = api.quality.name().to_string();
+    let choices: Vec<(String, &str)> = photocraft_ai::Quality::ALL
+        .iter()
+        .filter(|q| extended || !matches!(q, photocraft_ai::Quality::Xhigh | photocraft_ai::Quality::Max))
+        .map(|q| (q.name().into(), q.name()))
+        .collect();
+    crate::widgets::dropdown(ui, "generation-quality", &mut quality, &choices, 160.0);
+    if let Ok(q) = serde_json::from_value(json!(quality)) {
+        api.quality = q;
+    }
+    ui.small(tl!("Higher quality does not guarantee better transitions."));
+    let mut advanced = fields.get("advanced").and_then(Value::as_bool).unwrap_or(false);
+    ui.checkbox(&mut advanced, tl!("Advanced"));
+    fields.insert("advanced".into(), json!(advanced));
+    if advanced {
+        ui.label(tl!("API output"));
+        ui.small(tl!("Working size is calculated locally and sent explicitly."));
+        ui.horizontal(|ui| {
+            ui.label(tl!("Working edge limit (pixels)"));
+            ui.add(egui::DragValue::new(&mut api.max_working_edge).range(1024..=2048));
+        });
+        ui.separator();
+        ui.label(tl!("Local processing"));
+        ui.checkbox(&mut local.check_alignment, tl!("Check preserved context alignment"));
+        ui.add_enabled_ui(local.check_alignment, |ui| {
+            ui.checkbox(&mut local.correct_translation, tl!("Correct reliable small translations"));
+            ui.horizontal(|ui| {
+                ui.label(tl!("Maximum translation (working pixels)"));
+                ui.add(egui::DragValue::new(&mut local.max_translation).range(0..=8));
+            });
+        });
+        ui.horizontal(|ui| {
+            ui.label(tl!("Transition width (document pixels)"));
+            ui.add(egui::DragValue::new(&mut local.transition_width).range(0..=32));
+        });
+        ui.add_enabled_ui(local.check_alignment, |ui| {
+            ui.checkbox(&mut local.match_boundary_color, tl!("Match boundary color (experimental)"));
+        });
+        ui.checkbox(&mut local.diagnostics, tl!("Keep diagnostics for explicit export"));
+        ui.small(tl!("Diagnostics contain images and prompts. Nothing is exported automatically."));
+    }
+    obj.insert("imageOptions".into(), json!(api));
+    obj.insert("imageProcessing".into(), json!(local));
 }
 
 /// Prepare a replacement without modifying the connected provider or exposing the key.
@@ -104,6 +181,18 @@ pub fn body(app: &mut PhotocraftApp, ui: &mut egui::Ui, fields: &mut Map<String,
     let backend = provider_name(app);
     ui.label(crate::i18n::fmt(tl!("Image provider: {provider}"), &[("provider", backend)]));
     ui.label(format!("{}: {}", tl!("Model"), app.session.prefs().integrations.image_model));
+    let settings = &app.session.prefs().integrations;
+    ui.label(format!("{}: {}", tl!("Generation quality"), settings.image_options.quality.name()));
+    if let Some(st) = app.session.active() {
+        let w = fields.get("width").and_then(Value::as_u64).unwrap_or(u64::from(st.doc.size.width)) as u32;
+        let h = fields.get("height").and_then(Value::as_u64).unwrap_or(u64::from(st.doc.size.height)) as u32;
+        if let Some(backend) = app.session.generative_backend.as_ref()
+            && let Ok(caps) = backend.capabilities(&settings.image_model)
+            && let Ok(plan) = photocraft_ai::GeometryPlan::new(w, h, &settings.image_options, caps)
+        {
+            ui.label(format!("{}: {} × {}", tl!("Working surface"), plan.working[0], plan.working[1]));
+        }
+    }
     if app.session.generative_backend.is_none() {
         if app.services.generative_backend.is_some() {
             ui.small(tl!("Configure an image provider in AI Integrations."));
@@ -261,7 +350,7 @@ mod tests {
         }
         fn generate(&self, request: &photocraft_ai::Request, _: &(dyn Fn() -> bool + Sync)) -> photocraft_ai::Result<photocraft_ai::Response> {
             request.validate()?;
-            Ok(photocraft_ai::Response { version: photocraft_ai::VERSION, image: request.source.clone() })
+            Ok(photocraft_ai::Response { quality: None, version: photocraft_ai::VERSION, image: request.source.clone() })
         }
     }
     #[test]
@@ -279,6 +368,7 @@ mod tests {
                     photocraft_codecs::Image::from_u8(request.source.width, request.source.height, photocraft_codecs::ChannelLayout::Rgba, pixels).unwrap();
                 let png = photocraft_codecs::encode(&image, photocraft_codecs::Format::Png, &Default::default()).unwrap();
                 Ok(photocraft_ai::Response {
+                    quality: None,
                     version: photocraft_ai::VERSION,
                     image: photocraft_ai::PngImage::from_bytes(image.width(), image.height(), &png)?,
                 })
@@ -336,7 +426,7 @@ mod tests {
                 request.validate()?;
                 assert_eq!(request.operation, photocraft_ai::Operation::Remove);
                 assert!(request.prompt.contains("Reconstruct the background"));
-                Ok(photocraft_ai::Response { version: photocraft_ai::VERSION, image: request.source.clone() })
+                Ok(photocraft_ai::Response { quality: None, version: photocraft_ai::VERSION, image: request.source.clone() })
             }
         }
         let mut app = PhotocraftApp::new(Default::default(), Default::default());

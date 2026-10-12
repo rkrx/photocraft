@@ -1,10 +1,10 @@
 //! Editor half of image generation: snapshot → wire request → bounded, masked layer.
 //! Providers know nothing about documents; replacing one with an IPC client changes no edit logic.
 use crate::{EngineError, Result, Session, commands::CommandSpec, jobs::JobCtx};
-use photocraft_ai::{Backend, MAX_EDGE, MAX_PIXELS, Operation, PngImage, Request, Response, VERSION};
+use photocraft_ai::{Backend, MAX_EDGE, Operation, PngImage, Request, Response, VERSION};
 use photocraft_cms::{Builtin, Intent, Transform};
-use photocraft_codecs::{ChannelLayout, DecodeOptions, EncodeOptions, Format, Image, Limits};
-use photocraft_color::{PixelFormat, SampleType};
+use photocraft_codecs::{ChannelLayout, EncodeOptions, Format, Image};
+use photocraft_color::PixelFormat;
 use photocraft_doc::{Document, Layer, LayerContent};
 use photocraft_raster::Surface;
 use serde_json::{Value, json};
@@ -12,7 +12,7 @@ use std::sync::Arc;
 
 pub const FILL: &str = "edit.generativeFill";
 pub const REMOVE: &str = "edit.generativeRemove";
-const REMOVE_PROMPT: &str = "Remove the unwanted objects inside the editable selection. Reconstruct the background that would naturally exist behind them, using the surrounding image as context. Match its texture, lighting, perspective and continuity. Do not replace the removed objects with new objects or leave transparent holes. Preserve the image outside the selection.";
+const REMOVE_PROMPT: &str = "Remove only the unwanted objects inside the indicated selection. The selection is the maximum allowed edit area, not an object silhouette: do not replace everything inside it. Preserve all other visible objects, people, body parts, clothing and scene structure, including those intersecting the selection. Reconstruct only the background hidden by the removed objects, using the surrounding scene as evidence. Continue surfaces, perspective, material boundaries, shadows and lighting naturally. Match the photograph's local colors, contrast, focus and grain; do not sharpen, denoise, restore or beautify it. Merge the reconstructed area invisibly into the surrounding image without a rectangular patch. Keep framing and alignment unchanged, preserve the image outside the selection and return opaque reconstructed content.";
 const MAX_REMOVE_DETAIL: usize = 31_000;
 
 fn error(e: impl std::fmt::Display) -> EngineError {
@@ -41,6 +41,71 @@ fn enabled(s: &Session) -> std::result::Result<(), String> {
 
 pub fn specs() -> Vec<CommandSpec> {
     vec![
+        CommandSpec {
+            id: "ai.comparison",
+            label: "Prepare Quality Comparison",
+            menu: &[],
+            shortcut: None,
+            enabled: crate::commands::always,
+            journal: false,
+            params: "{} Return identical high/xhigh requests from the last capture. No network calls; explicitly export to inspect or use externally after authorization.",
+            run: |s, _| {
+                let guard = s.generative_diagnostic.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                let capture = guard.as_ref().ok_or_else(|| error("no diagnostic capture"))?;
+                capture.validate()?;
+                let caps = photocraft_ai::Capabilities::for_model(&capture.request.model).ok_or_else(|| error("unknown comparison model"))?;
+                let mut high = capture.request.clone();
+                high.options.quality = photocraft_ai::Quality::High;
+                let mut xhigh = high.clone();
+                xhigh.options.quality = photocraft_ai::Quality::Xhigh;
+                caps.validate(&xhigh.options, xhigh.source.width, xhigh.source.height).map_err(error)?;
+                Ok(json!({"high":high,"xhigh":xhigh,"plan":capture.plan,"local":capture.local,"networkCalled":false}))
+            },
+        },
+        CommandSpec {
+            id: "ai.diagnostics",
+            label: "Generation Diagnostics",
+            menu: &[],
+            shortcut: None,
+            params: "{} Get the last explicitly enabled capture, or null. {clear:true} releases it.",
+            enabled: crate::commands::always,
+            journal: false,
+            run: |s, p| {
+                let mut capture = s.generative_diagnostic.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                if p.get("clear").and_then(Value::as_bool) == Some(true) {
+                    *capture = None;
+                }
+                serde_json::to_value(&*capture).map_err(error)
+            },
+        },
+        CommandSpec {
+            id: "ai.replay",
+            label: "Replay Generation Offline",
+            menu: &[],
+            shortcut: None,
+            params: "{capture:Diagnostic} Process a bounded exported capture without networking or document changes; returns new diagnostics. Omit capture to replay the last capture.",
+            enabled: crate::commands::always,
+            journal: false,
+            run: |s, p| {
+                let mut capture: crate::generative_pipeline::Diagnostic = if let Some(value) = p.get("capture") {
+                    serde_json::from_value(value.clone()).map_err(error)?
+                } else {
+                    s.generative_diagnostic.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone().ok_or_else(|| error("no diagnostic capture"))?
+                };
+                if let Some(local) = p.get("local") {
+                    capture.local = serde_json::from_value(local.clone()).map_err(error)?;
+                }
+                capture.validate()?;
+                let response = capture.response.clone().ok_or_else(|| error("capture contains no provider response"))?;
+                capture.local.diagnostics = true;
+                let ctx = JobCtx::default();
+                let outcome = crate::generative_pipeline::process(&mut capture, response, &ctx);
+                capture.error = outcome.as_ref().err().map(ToString::to_string);
+                *s.generative_diagnostic.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(capture.clone());
+                outcome?;
+                serde_json::to_value(capture).map_err(error)
+            },
+        },
         CommandSpec {
             id: FILL,
             label: "Generative Fill…",
@@ -105,22 +170,37 @@ fn edit(s: &mut Session, p: &Value, operation: Operation) -> Result<Value> {
         Operation::Expand => return Err(error("use the Generative Expand command with a target size")),
     };
     let (model, backend) = options(s, p)?;
+    let api = s.prefs().integrations.image_options.clone();
+    let local = s.prefs().integrations.image_processing.clone();
+    let caps = backend.capabilities(&model).map_err(error)?;
+    let store = s.generative_diagnostic.clone();
+    *store.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = None;
+    photocraft_ai::GeometryPlan::new(
+        s.active().ok_or(EngineError::NoDocument)?.doc.size.width,
+        s.active().ok_or(EngineError::NoDocument)?.doc.size.height,
+        &api,
+        caps,
+    )
+    .map_err(error)?;
+    let finish_store = store.clone();
     crate::jobs::edit_job(
         s,
         label,
         move |doc, active, ctx| {
-            let request = prepare(doc, operation, prompt, model, ctx)?;
-            let response = generate(backend.as_ref(), &request, ctx)?;
-            ctx.progress(0.85, "Preparing generated layer");
-            let surface = result_surface(doc, &response, ctx)?;
+            let start = crate::generative_pipeline::Timer::new();
+            let mut request = prepare(doc, operation, prompt, model, ctx)?;
+            request.options = api;
+            let mut capture = crate::generative_pipeline::prepare(request, caps, local, ctx)?;
+            let metadata = json!({"quality": capture.request.options.quality, "workingSize": capture.plan.working, "geometry": capture.plan});
+            let surface = execute_pipeline(doc, backend.as_ref(), &mut capture, &store, &start, ctx)?;
             ctx.check()?;
             // The source is the full visible composite. Place its replacement above the root
             // stack so upper layers or a hidden/adjusted active group cannot obscure it.
             let id = doc.insert_above(None, Layer::new(label, LayerContent::Raster(surface)));
             *active = Some(id);
-            Ok(id.0)
+            Ok(json!({"layer":id.0,"operation":operation,"used":metadata,"alignment":capture.alignment,"captureId":capture.capture_id}))
         },
-        move |layer| json!({"layer": layer, "operation": operation}),
+        move |result| crate::generative_pipeline::finish(&finish_store, result),
     )
 }
 
@@ -173,7 +253,7 @@ fn prepare(doc: &Document, operation: Operation, prompt: String, model: String, 
             mask.extend_from_slice(&[255, 255, 255, alpha]);
         }
     }
-    let request = Request { version: VERSION, operation, prompt, model, source, mask: encode(width, height, mask)? };
+    let request = Request { version: VERSION, operation, prompt, model, options: Default::default(), source, mask: encode(width, height, mask)? };
     request.validate().map_err(error)?;
     Ok(request)
 }
@@ -200,55 +280,35 @@ fn finite_coverage(v: f32) -> f32 {
     if v.is_finite() { v.clamp(0.0, 1.0) } else { 0.0 }
 }
 
-pub(crate) fn result_surface(doc: &Document, response: &Response, ctx: &JobCtx) -> Result<Surface> {
-    if response.version != VERSION {
-        return Err(error("unsupported image response version"));
+pub(crate) fn execute_pipeline(
+    doc: &Document,
+    backend: &dyn Backend,
+    capture: &mut crate::generative_pipeline::Diagnostic,
+    store: &crate::generative_pipeline::Capture,
+    start: &crate::generative_pipeline::Timer,
+    ctx: &JobCtx,
+) -> Result<Surface> {
+    let result = generate(backend, &capture.request, ctx).and_then(|r| crate::generative_pipeline::process(capture, r, ctx)).and_then(|rgba| {
+        ctx.progress(0.85, "Preparing generated layer");
+        result_surface(doc, &rgba, ctx)
+    });
+    if capture.local.diagnostics {
+        capture.error = result.as_ref().err().map(ToString::to_string);
+        capture.elapsed_ms = start.elapsed_ms();
+        *store.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(capture.clone());
     }
-    let bytes = response.image.bytes(photocraft_ai::MAX_IMAGE_BYTES).map_err(error)?;
-    let opts = DecodeOptions {
-        limits: Limits { max_width: MAX_EDGE, max_height: MAX_EDGE, max_pixels: MAX_PIXELS, max_alloc: 64 * 1024 * 1024 },
-        ..Default::default()
-    };
-    let image = photocraft_codecs::decode_as_with(Format::Png, &bytes, &opts).map_err(error)?;
-    if !image.warnings.is_empty() {
-        return Err(error("backend returned an incomplete image"));
-    }
-    if (image.width(), image.height()) != (response.image.width, response.image.height) {
-        return Err(error("response dimensions disagree with PNG"));
-    }
-    if let Some(icc) = image.icc.as_ref() {
-        let profile = photocraft_cms::Profile::parse(icc).map_err(error)?;
-        if !profile.same_colors(Builtin::Srgb.profile()) {
-            return Err(error("backend must return sRGB PNG pixels"));
-        }
-    }
-    let image = image.convert(ChannelLayout::Rgba, photocraft_codecs::SampleType::F32);
-    let values = image.to_normalized();
-    let mut generated = Surface::new(PixelFormat::new(photocraft_color::ColorMode::Rgb, SampleType::F32, true));
-    let area = photocraft_geom::Rect::new(0, 0, image.width() as i32, image.height() as i32);
-    generated.write_region(area, &values);
+    result
+}
+pub(crate) fn result_surface(doc: &Document, rgba: &[f32], ctx: &JobCtx) -> Result<Surface> {
     let (w, h) = (doc.size.width, doc.size.height);
-    // Automatic provider sizes are fitted to the submitted canvas. Refuse aspect changes.
-    let input_ratio = f64::from(w) / f64::from(h);
-    let output_ratio = f64::from(image.width()) / f64::from(image.height());
-    if (input_ratio / output_ratio - 1.0).abs() > 0.03 {
-        return Err(error("provider changed the image aspect ratio; result was not applied"));
+    if rgba.len() != w as usize * h as usize * 4 {
+        return Err(error("generated pixel dimensions disagree with document"));
     }
-    if (image.width(), image.height()) != (w, h) {
-        generated = photocraft_algo::resample::resize_surface_in_canvas(
-            &generated,
-            f64::from(w) / f64::from(image.width()),
-            f64::from(h) / f64::from(image.height()),
-            photocraft_algo::resample::Resample::Bicubic,
-            area,
-        );
-    }
-    let rgba = generated.read_region(doc.bounds());
     let fmt = PixelFormat::new(doc.mode, doc.depth, true);
     let channels = fmt.channels();
     let mut native = vec![0.0; w as usize * h as usize * channels];
     let transform = Transform::new(Builtin::Srgb.profile(), &crate::color_cmds::document_profile(doc), Intent::RelativeColorimetric, true).map_err(error)?;
-    transform.convert_f32(&rgba, 4, &mut native, channels, true);
+    transform.convert_f32(rgba, 4, &mut native, channels, true);
     let mask = doc.selection.as_ref().ok_or_else(|| error("no selection"))?;
     // The provider mask is guidance only: enforce the original feathered mask locally.
     for (i, pixel) in native.chunks_exact_mut(channels).enumerate() {

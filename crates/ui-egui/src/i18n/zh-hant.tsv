@@ -2664,3 +2664,44 @@ curves	Smooth	平滑
 	API charges may apply. Canvas expansion and the new layer form one undo step.	可能產生API費用。畫布擴展與新圖層可透過一次復原還原。
 	Remember last text per AI dialog	記住每個 AI 對話框的上次文字
 	Turning this off clears the saved AI texts.	關閉此選項會清除已儲存的 AI 文字。
+
+# Generative geometry, quality and explicit offline diagnostics
+	Generation diagnostics…	生成診斷…
+	Generation quality	生成品質
+	Higher quality does not guarantee better transitions.	更高品質不保證更好的邊緣過渡。
+	API output	API 輸出
+	Working size is calculated locally and sent explicitly.	工作尺寸在本機計算並明確傳送。
+	Working edge limit (pixels)	工作邊長上限（像素）
+	Local processing	本機處理
+	Check preserved context alignment	檢查保留區域的對齊
+	Correct reliable small translations	校正確切識別的小幅偏移
+	Maximum translation (working pixels)	最大偏移（工作像素）
+	Transition width (document pixels)	過渡寬度（文件像素）
+	Match boundary color (experimental)	匹配邊界顏色（實驗性）
+	Keep diagnostics for explicit export	保留診斷供明確匯出
+	Diagnostics contain images and prompts. Nothing is exported automatically.	診斷包含影像和文字。不會自動匯出。
+	Working surface	工作區域
+	Export diagnostics…	匯出診斷…
+	Import diagnostics…	匯入診斷…
+	Replay offline	離線重新處理
+	Alignment	對齊
+	Document source	文件原圖
+	Transmitted source	傳送的原圖
+	Generation mask (alpha)	生成遮色片（Alpha）
+	Unmodified response	未修改的回應
+	Mapped result	逆變換結果
+	Insertion mask (alpha)	插入遮色片（Alpha）
+	Final result	最終結果
+	No diagnostic capture. Enable diagnostics before generating, or import a capture.	沒有診斷。請在生成前啟用，或匯入診斷。
+	Plausible	合理
+	Translation corrected	偏移已校正
+	Translation requires correction	偏移需要校正
+	Geometric deviation	幾何偏差
+	Insufficient context	上下文不足
+	Disabled	已停用
+	Transparent areas are editable; opaque areas are protected.	透明區域可編輯；不透明區域受保護。
+	Result applied	結果已套用
+	Preview only	僅預覽
+	Diagnostics saved to {path}.	診斷已儲存至 {path}。
+	Diagnostic file picker is unavailable.	診斷檔案選擇器無法使用。
+	Apply the diagnostic setting before generating. Earlier attempts were not retained.	請在生成前套用診斷設定。之前的嘗試未被保留。

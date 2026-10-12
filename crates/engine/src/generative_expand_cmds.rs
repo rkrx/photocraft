@@ -7,7 +7,7 @@ use photocraft_raster::Surface;
 use serde_json::{Value, json};
 
 pub const EXPAND: &str = "edit.generativeExpand";
-const PROMPT: &str = "Extend the image naturally into the editable margins beyond the original image rectangle. Continue the existing background, texture, lighting and perspective seamlessly. Keep the original image at its current size and position; do not stretch, crop or change its contents. Generate complete opaque image content in the new margins.";
+const PROMPT: &str = "Outpaint only the new margins beyond the original image rectangle. Keep the original image at its exact current size and position; do not stretch, crop, move, reinterpret or change its contents. Treat every edge of the original rectangle as a continuation constraint: continue surfaces, lines, shadows and material boundaries through that edge at the same position and perspective. Continue any existing people, body parts or objects cut off by an image edge coherently into the new margin; do not replace them with unrelated people or abruptly terminate them. Match the original photograph's local colors, exposure, contrast, focus, blur and photographic grain exactly. Do not sharpen, denoise, restore, beautify or modernize the photograph. The new margins must join invisibly without a rectangular frame, brightness step or texture change. Generate complete opaque image content in the new margins.";
 
 fn error(message: impl Into<String>) -> EngineError {
     EngineError::Other(message.into())
@@ -105,15 +105,26 @@ fn expand(s: &mut Session, p: &Value) -> Result<Value> {
     }
     let prompt = if detail.trim().is_empty() { PROMPT.to_string() } else { format!("{PROMPT}\nScene to continue: {}", detail.trim()) };
     let (model, backend) = shared::options(s, p)?;
+    let api = s.prefs().integrations.image_options.clone();
+    let local = s.prefs().integrations.image_processing.clone();
+    let caps = backend.capabilities(&model).map_err(|e| error(e.to_string()))?;
+    photocraft_ai::GeometryPlan::new(target.width, target.height, &api, caps).map_err(|e| error(e.to_string()))?;
+    let store = s.generative_diagnostic.clone();
+    *store.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = None;
+    let finish_store = store.clone();
     crate::jobs::edit_job(
         s,
         "Generative Expand",
         move |doc, active, ctx| {
+            let start = crate::generative_pipeline::Timer::new();
             let original_size = doc.size;
             let original_rect = Rect::from_xywh(target.offset[0], target.offset[1], original_size.width, original_size.height);
             ctx.check()?;
             let original = photocraft_compose::render(doc, doc.bounds());
-            let request = prepare(doc, &original, target, prompt, model, ctx)?;
+            let mut request = prepare(doc, &original, target, prompt, model, ctx)?;
+            request.options = api;
+            let mut capture = crate::generative_pipeline::prepare(request, caps, local, ctx)?;
+            let metadata = json!({"quality":capture.request.options.quality,"workingSize":capture.plan.working,"geometry":capture.plan});
             // These are changes to the job's private snapshot. No partial canvas edit is published.
             crate::image_cmds::translate_doc(doc, EXPAND, target.offset[0], target.offset[1])?;
             doc.size = Size::new(target.width, target.height);
@@ -129,16 +140,19 @@ fn expand(s: &mut Session, p: &Value) -> Result<Value> {
             margins.fill_rect(doc.bounds(), &[1.0]);
             margins.fill_rect(original_rect, &[0.0]);
             doc.selection = Some(margins);
-            let response = shared::generate(backend.as_ref(), &request, ctx)?;
-            ctx.progress(0.85, "Preparing expanded canvas");
-            let surface = shared::result_surface(doc, &response, ctx)?;
+            let surface = shared::execute_pipeline(doc, backend.as_ref(), &mut capture, &store, &start, ctx)?;
             // Incomplete transparent margins would reveal previously off-canvas layer pixels.
             let alpha = surface.format().channels() - 1;
             for y in 0..target.height as i32 {
                 ctx.check()?;
                 for x in 0..target.width as i32 {
                     if !original_rect.contains(x, y) && surface.sample_channel(x, y, alpha) < 0.999 {
-                        return Err(error("provider returned transparent margins; expanded canvas was not applied"));
+                        let message = "provider returned transparent margins; expanded canvas was not applied";
+                        if capture.local.diagnostics {
+                            capture.error = Some(message.into());
+                            *store.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(capture.clone());
+                        }
+                        return Err(error(message));
                     }
                 }
             }
@@ -146,9 +160,11 @@ fn expand(s: &mut Session, p: &Value) -> Result<Value> {
             doc.selection = original_selection;
             let id = doc.insert_above(None, Layer::new("Generative Expand", LayerContent::Raster(surface)));
             *active = Some(id);
-            Ok(id.0)
+            Ok(
+                json!({"layer": id.0,"operation":Operation::Expand,"width":target.width,"height":target.height,"offset":target.offset,"used":metadata,"alignment":capture.alignment,"captureId":capture.capture_id}),
+            )
         },
-        move |layer| json!({"layer": layer, "operation": Operation::Expand, "width": target.width, "height": target.height, "offset": target.offset}),
+        move |result| crate::generative_pipeline::finish(&finish_store, result),
     )
 }
 
@@ -179,6 +195,7 @@ fn prepare(doc: &Document, original: &photocraft_compose::Buffer, target: Geomet
         operation: Operation::Expand,
         prompt,
         model,
+        options: Default::default(),
         source: shared::encode(target.width, target.height, source)?,
         mask: shared::encode(target.width, target.height, mask)?,
     };

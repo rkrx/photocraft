@@ -3062,3 +3062,43 @@ curves	Smooth	Haluskan
 	API charges may apply. Canvas expansion and the new layer form one undo step.	Biaya API mungkin berlaku. Perluasan kanvas dan lapisan baru menjadi satu langkah urungkan.
 	Remember last text per AI dialog	Ingat teks terakhir untuk setiap dialog AI
 	Turning this off clears the saved AI texts.	Menonaktifkan ini menghapus teks AI yang disimpan.
+
+# Generative geometry, quality and explicit offline diagnostics
+	Generation diagnostics…	Diagnostik generasi…
+	Generation quality	Kualitas generasi
+	Higher quality does not guarantee better transitions.	Kualitas lebih tinggi tidak menjamin transisi lebih baik.
+	API output	Keluaran API
+	Working size is calculated locally and sent explicitly.	Ukuran kerja dihitung secara lokal dan dikirim secara eksplisit.
+	Working edge limit (pixels)	Batas sisi kerja (piksel)
+	Local processing	Pemrosesan lokal
+	Check preserved context alignment	Periksa keselarasan konteks yang dipertahankan
+	Correct reliable small translations	Koreksi pergeseran kecil yang terdeteksi dengan pasti
+	Maximum translation (working pixels)	Pergeseran maksimum (piksel kerja)
+	Transition width (document pixels)	Lebar transisi (piksel dokumen)
+	Match boundary color (experimental)	Sesuaikan warna batas (eksperimental)
+	Keep diagnostics for explicit export	Simpan diagnostik untuk ekspor eksplisit
+	Diagnostics contain images and prompts. Nothing is exported automatically.	Diagnostik berisi gambar dan teks. Tidak ada ekspor otomatis.
+	Working surface	Permukaan kerja
+	Export diagnostics…	Ekspor diagnostik…
+	Import diagnostics…	Impor diagnostik…
+	Replay offline	Proses ulang secara offline
+	Document source	Sumber dokumen
+	Transmitted source	Sumber yang dikirim
+	Generation mask (alpha)	Masker generasi (alfa)
+	Unmodified response	Respons tanpa perubahan
+	Mapped result	Hasil yang dipetakan kembali
+	Insertion mask (alpha)	Masker penyisipan (alfa)
+	Final result	Hasil akhir
+	No diagnostic capture. Enable diagnostics before generating, or import a capture.	Tidak ada diagnostik. Aktifkan sebelum generasi atau impor diagnostik.
+	Plausible	Masuk akal
+	Translation corrected	Pergeseran dikoreksi
+	Translation requires correction	Pergeseran memerlukan koreksi
+	Geometric deviation	Penyimpangan geometris
+	Insufficient context	Konteks tidak memadai
+	Disabled	Dinonaktifkan
+	Transparent areas are editable; opaque areas are protected.	Area transparan dapat diedit; area buram dilindungi.
+	Result applied	Hasil diterapkan
+	Preview only	Hanya pratinjau
+	Diagnostics saved to {path}.	Diagnostik disimpan ke {path}.
+	Diagnostic file picker is unavailable.	Pemilih berkas diagnostik tidak tersedia.
+	Apply the diagnostic setting before generating. Earlier attempts were not retained.	Terapkan pengaturan diagnostik sebelum menghasilkan gambar. Percobaan sebelumnya tidak disimpan.

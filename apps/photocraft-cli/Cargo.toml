@@ -23,6 +23,7 @@ name = "photocraft-cli"
 path = "src/main.rs"
 
 [dependencies]
+photocraft-ai = { workspace = true }
 photocraft-ai-openai = { workspace = true }
 photocraft-automation = { path = "../../crates/automation" }
 photocraft-engine = { workspace = true }

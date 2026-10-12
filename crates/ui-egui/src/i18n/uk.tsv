@@ -3771,3 +3771,43 @@ curves	Smooth	Згладити
 	API charges may apply. Canvas expansion and the new layer form one undo step.	Може стягуватися плата за API. Розширення полотна та новий шар утворюють один крок скасування.
 	Remember last text per AI dialog	Запам’ятовувати останній текст для кожного діалогу ШІ
 	Turning this off clears the saved AI texts.	Вимкнення видаляє збережені тексти ШІ.
+
+# Generative geometry, quality and explicit offline diagnostics
+	Generation diagnostics…	Діагностика генерації…
+	Generation quality	Якість генерації
+	Higher quality does not guarantee better transitions.	Вища якість не гарантує кращих переходів.
+	API output	Вивід API
+	Working size is calculated locally and sent explicitly.	Робочий розмір обчислюється локально й передається явно.
+	Working edge limit (pixels)	Межа робочої сторони (пікселі)
+	Local processing	Локальна обробка
+	Check preserved context alignment	Перевіряти вирівнювання збереженого контексту
+	Correct reliable small translations	Виправляти надійно виявлені малі зсуви
+	Maximum translation (working pixels)	Максимальний зсув (робочі пікселі)
+	Transition width (document pixels)	Ширина переходу (пікселі документа)
+	Match boundary color (experimental)	Підбирати колір межі (експериментально)
+	Keep diagnostics for explicit export	Зберігати діагностику для явного експорту
+	Diagnostics contain images and prompts. Nothing is exported automatically.	Діагностика містить зображення й тексти. Нічого не експортується автоматично.
+	Working surface	Робоча поверхня
+	Export diagnostics…	Експорт діагностики…
+	Import diagnostics…	Імпорт діагностики…
+	Replay offline	Повторна обробка офлайн
+	Document source	Джерело документа
+	Transmitted source	Передане джерело
+	Generation mask (alpha)	Маска генерації (альфа)
+	Unmodified response	Незмінена відповідь
+	Mapped result	Перетворений результат
+	Insertion mask (alpha)	Маска вставлення (альфа)
+	Final result	Кінцевий результат
+	No diagnostic capture. Enable diagnostics before generating, or import a capture.	Немає діагностики. Увімкніть її перед генерацією або імпортуйте файл.
+	Plausible	Правдоподібно
+	Translation corrected	Зсув виправлено
+	Translation requires correction	Зсув потребує виправлення
+	Geometric deviation	Геометричне відхилення
+	Insufficient context	Недостатньо контексту
+	Disabled	Вимкнено
+	Transparent areas are editable; opaque areas are protected.	Прозорі ділянки можна редагувати; непрозорі захищені.
+	Result applied	Результат застосовано
+	Preview only	Лише попередній перегляд
+	Diagnostics saved to {path}.	Діагностику збережено в {path}.
+	Diagnostic file picker is unavailable.	Вибір файлу діагностики недоступний.
+	Apply the diagnostic setting before generating. Earlier attempts were not retained.	Застосуйте налаштування діагностики до генерації. Попередні спроби не були збережені.

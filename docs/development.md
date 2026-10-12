@@ -61,6 +61,37 @@ cargo test --doc --workspace               # nextest does not run doctests
 
 [cargo-nextest](https://nexte.st) runs each test in its own process. `.config/nextest.toml` puts the GPU tests (`photocraft-gpu`, and ui-egui's integration and canvas/GPU tests) in a group of at most 4 at a time, because each process opens its own wgpu device and the in-process `gpu_lock()` no longer serializes them. On a 32-thread Windows machine the full workspace went from 297 s (`cargo test`) to about 120 s (#2204). Ignored tests run with `cargo nextest run --run-ignored only`. CI still runs `cargo test`, and a full `cargo test` stays the final check before a PR.
 
+### Keeping local build storage small
+
+Native development/test builds disable incremental compilation by default. Finished binaries,
+test executables and dependency libraries are still cached; editing a crate recompiles that crate
+without retaining its per-function incremental history. `CARGO_INCREMENTAL=1` explicitly opts back in.
+
+For individual development steps, use the wrapper so disposable intermediates are removed after
+the Cargo process exits, including after a failed build:
+
+```sh
+cargo xtask step -- build -p photocraft-cli
+cargo xtask step -- test -p photocraft-engine
+cargo xtask step -- clippy -p photocraft-cli --all-targets -- -D warnings
+cargo xtask clean-build --dry-run   # inspect the existing native debug cache
+cargo xtask clean-build             # reclaim it without rebuilding applications
+```
+
+The same cleanup runs after Cargo subprocesses in `cargo xtask ci`, `wasm`, `parity`, `perf`
+and `test-corpus`. Plain `cargo build/test/check` has no post-build hook; use `xtask step` when
+automatic cleanup is wanted. `PHOTOCRAFT_BUILD_CLEANUP=0` disables automatic cleanup for a step.
+
+Cleanup exclusively targets this checkout's `target/debug/incremental` and leftover `*.rcgu.o`
+files directly in `target/debug/deps` and `target/debug/examples`. It holds Cargo's native debug
+build lock, skips a busy build, refuses linked directories, and retains the lock file, fingerprints,
+finished programs/tests/examples, libraries, metadata, build-script outputs, release artifacts and
+Wasm outputs. Custom target directories are not pruned. Removing hard-linked codegen objects
+and their incremental cache together is necessary to actually reclaim their storage.
+
+This removes disposable intermediates, not all historical feature/profile variants. A complete
+reset remains `cargo clean`, which also discards reusable libraries and requires rebuilding.
+
 ## Fonts (craft-fonts)
 
 Font assets shared by the Crafting Apps live in [storytold/craft-fonts](https://github.com/storytold/craft-fonts), never in this repo: don't commit font files here (Inter and JetBrains Mono in `assets/fonts/` are the only exceptions; new fonts go to craft-fonts). The rules are in `craftrules/standards/fonts.md` in a sibling `craftrules` checkout (see below); that repository is not public, so outside contributors can ask a maintainer for the rules that apply to their change.
@@ -160,6 +191,11 @@ cargo run -p photocraft-cli -- commands --filter blur                    # the c
 ```
 
 `actions.json` holds the steps of a recorded action: `[["<id>", {…}], …]`, `[{"command": "<id>", "params": {…}}, …]` or bare ids, as a list or wrapped in `{"actions": …}` or `{"steps": …}`; a droplet file works too. It can also be an Actions set (the Actions panel's `actions.json`, `{"actions": [{"name": …, "steps": […]}, …]}`): `--action <name>` picks the action to play (optional when the set holds one), and the whole set is loaded for each file, so a step that plays another action of the set works. `batch` refuses an `--out` folder that is the `--in` folder, since the results would replace the originals, unless `--in-place` is given. `run` prints one JSON line per command result.
+
+`generative-fill` and `generative-remove` take an input image, selection mask and output path;
+`generative-expand` takes target dimensions or `--aspect 16:9`. These adapters test the existing
+engine actions without a UI and support saved responses, typed processing options and failure
+diagnostics; see [direct CLI generation testing](generative-ai.md#direct-cli-generation-testing).
 
 ## Native format (.pcraft)
 

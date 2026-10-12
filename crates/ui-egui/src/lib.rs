@@ -86,6 +86,7 @@ pub mod flick_pan;
 mod font_preview;
 pub mod frame_tool;
 pub mod gallery_ui;
+pub mod generative_diagnostics_ui;
 pub mod generative_ui;
 pub mod gpu_canvas;
 pub mod gpu_status;
@@ -943,7 +944,9 @@ impl PhotocraftApp {
                     .session
                     .active()
                     .is_some_and(|st| st.active_layer.is_some_and(|layer| params.get("layer").and_then(Value::as_u64).is_none_or(|target| target == layer.0)));
-        let r = if id == "actions.play" {
+        let r = if id.starts_with("ai.diagnostics.") {
+            generative_diagnostics_ui::run(self, id, &params)
+        } else if id == "actions.play" {
             actions::play(self, &params)
         } else if photocraft_engine::actions_cmds::shell_view_command(id) {
             actions::run_view(self, id, params)

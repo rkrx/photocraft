@@ -3833,3 +3833,42 @@ curves	Smooth	Vloeiend maken
 	API charges may apply. Canvas expansion and the new layer form one undo step.	Er kunnen API-kosten gelden. De canvasuitbreiding en de nieuwe laag vormen één stap om ongedaan te maken.
 	Remember last text per AI dialog	Laatste tekst per AI-dialoog onthouden
 	Turning this off clears the saved AI texts.	Uitschakelen wist de opgeslagen AI-teksten.
+
+# Generative geometry, quality and explicit offline diagnostics
+	Generation diagnostics…	Generatiediagnose…
+	Generation quality	Generatiekwaliteit
+	Higher quality does not guarantee better transitions.	Hogere kwaliteit garandeert geen betere overgangen.
+	API output	API-uitvoer
+	Working size is calculated locally and sent explicitly.	De werkgrootte wordt lokaal berekend en expliciet verzonden.
+	Working edge limit (pixels)	Maximale werkzijde (pixels)
+	Local processing	Lokale verwerking
+	Check preserved context alignment	Uitlijning van behouden context controleren
+	Correct reliable small translations	Betrouwbare kleine verschuivingen corrigeren
+	Maximum translation (working pixels)	Maximale verschuiving (werkpixels)
+	Transition width (document pixels)	Overgangsbreedte (documentpixels)
+	Match boundary color (experimental)	Randkleur aanpassen (experimenteel)
+	Keep diagnostics for explicit export	Diagnose bewaren voor expliciete export
+	Diagnostics contain images and prompts. Nothing is exported automatically.	De diagnose bevat afbeeldingen en teksten. Niets wordt automatisch geëxporteerd.
+	Working surface	Werkvlak
+	Export diagnostics…	Diagnose exporteren…
+	Import diagnostics…	Diagnose importeren…
+	Replay offline	Offline opnieuw verwerken
+	Document source	Documentbron
+	Transmitted source	Verzonden bron
+	Generation mask (alpha)	Generatiemasker (alfa)
+	Unmodified response	Ongewijzigd antwoord
+	Mapped result	Teruggetransformeerd resultaat
+	Insertion mask (alpha)	Invoegmasker (alfa)
+	Final result	Eindresultaat
+	No diagnostic capture. Enable diagnostics before generating, or import a capture.	Geen diagnose. Schakel deze vóór generatie in of importeer een diagnose.
+	Plausible	Aannemelijk
+	Translation corrected	Verschuiving gecorrigeerd
+	Translation requires correction	Verschuiving vereist correctie
+	Geometric deviation	Geometrische afwijking
+	Insufficient context	Onvoldoende context
+	Transparent areas are editable; opaque areas are protected.	Transparante gebieden zijn bewerkbaar; ondoorzichtige gebieden zijn beschermd.
+	Result applied	Resultaat toegepast
+	Preview only	Alleen voorbeeld
+	Diagnostics saved to {path}.	Diagnose opgeslagen in {path}.
+	Diagnostic file picker is unavailable.	De bestandskiezer voor diagnoses is niet beschikbaar.
+	Apply the diagnostic setting before generating. Earlier attempts were not retained.	Pas de diagnose-instelling toe vóór het genereren. Eerdere pogingen zijn niet bewaard.

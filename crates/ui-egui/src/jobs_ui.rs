@@ -484,9 +484,13 @@ fn on_event(app: &mut PhotocraftApp, ctx: &egui::Context, e: JobEvent) {
             app.ui.panels.brush_settings = true;
             app.ui.brush_tab = 1;
         }
-        JobOutcome::Done(_) => {
+        JobOutcome::Done(v) => {
             app.sync_views();
-            app.ui.status = e.label;
+            app.ui.status = if let Some(used) = v.get("used") {
+                format!("{} · {} · {} × {}", e.label, used["quality"].as_str().unwrap_or("?"), used["workingSize"][0], used["workingSize"][1])
+            } else {
+                e.label
+            };
             app.ui.status_error = false;
         }
         JobOutcome::Failed(err) => {

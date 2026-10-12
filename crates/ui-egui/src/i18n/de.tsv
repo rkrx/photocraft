@@ -2714,3 +2714,44 @@ curves	Smooth	Glätten
 	API charges may apply. Canvas expansion and the new layer form one undo step.	Es können API-Kosten entstehen. Leinwanderweiterung und neue Ebene bilden einen Undo-Schritt.
 	Remember last text per AI dialog	Letzten Text pro KI-Dialog merken
 	Turning this off clears the saved AI texts.	Beim Ausschalten werden die gespeicherten KI-Texte gelöscht.
+
+# Generative geometry, quality and explicit offline diagnostics
+	Generation diagnostics…	Generierungsdiagnose…
+	Generation quality	Generierungsqualität
+	Higher quality does not guarantee better transitions.	Höhere Qualität garantiert keine besseren Übergänge.
+	API output	API-Ausgabe
+	Working size is calculated locally and sent explicitly.	Die Arbeitsgröße wird lokal berechnet und ausdrücklich übermittelt.
+	Working edge limit (pixels)	Maximale Arbeitskante (Pixel)
+	Local processing	Lokale Verarbeitung
+	Check preserved context alignment	Ausrichtung des erhaltenen Kontexts prüfen
+	Correct reliable small translations	Eindeutige kleine Verschiebungen korrigieren
+	Maximum translation (working pixels)	Maximale Verschiebung (Arbeitspixel)
+	Transition width (document pixels)	Übergangsbreite (Dokumentpixel)
+	Match boundary color (experimental)	Randfarben anpassen (experimentell)
+	Keep diagnostics for explicit export	Diagnose für bewussten Export behalten
+	Diagnostics contain images and prompts. Nothing is exported automatically.	Die Diagnose enthält Bilder und Texte. Es wird nichts automatisch exportiert.
+	Working surface	Arbeitsfläche
+	Export diagnostics…	Diagnose exportieren…
+	Import diagnostics…	Diagnose importieren…
+	Replay offline	Offline erneut verarbeiten
+	Alignment	Ausrichtung
+	Document source	Ausgangsbild im Dokument
+	Transmitted source	Übertragenes Ausgangsbild
+	Generation mask (alpha)	Generierungsmaske (Alpha)
+	Unmodified response	Unveränderte Antwort
+	Mapped result	Rücktransformiertes Ergebnis
+	Insertion mask (alpha)	Einsetzmaske (Alpha)
+	Final result	Endergebnis
+	No diagnostic capture. Enable diagnostics before generating, or import a capture.	Keine Diagnose vorhanden. Vor dem Generieren aktivieren oder eine Diagnose importieren.
+	Plausible	Plausibel
+	Translation corrected	Verschiebung korrigiert
+	Translation requires correction	Verschiebung muss korrigiert werden
+	Geometric deviation	Geometrische Abweichung
+	Insufficient context	Unzureichender Kontext
+	Disabled	Deaktiviert
+	Transparent areas are editable; opaque areas are protected.	Transparente Bereiche sind bearbeitbar; deckende Bereiche sind geschützt.
+	Result applied	Ergebnis übernommen
+	Preview only	Nur Vorschau
+	Diagnostics saved to {path}.	Diagnose unter {path} gespeichert.
+	Diagnostic file picker is unavailable.	Die Dateiauswahl für Diagnosen ist nicht verfügbar.
+	Apply the diagnostic setting before generating. Earlier attempts were not retained.	Die Diagnose-Einstellung muss vor der Generierung angewendet werden. Frühere Versuche wurden nicht aufbewahrt.

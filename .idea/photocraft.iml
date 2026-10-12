@@ -60,6 +60,8 @@
       <sourceFolder url="file://$MODULE_DIR$/crates/ui-egui/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/crates/vector/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/xtask/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/gpu/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/vector/examples" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />

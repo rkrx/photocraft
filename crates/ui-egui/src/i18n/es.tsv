@@ -2755,3 +2755,44 @@ curves	Smooth	Suavizar
 	API charges may apply. Canvas expansion and the new layer form one undo step.	Pueden aplicarse cargos de API. La expansión del lienzo y la nueva capa forman un paso de deshacer.
 	Remember last text per AI dialog	Recordar el último texto de cada diálogo de IA
 	Turning this off clears the saved AI texts.	Al desactivar esta opción se borran los textos de IA guardados.
+
+# Generative geometry, quality and explicit offline diagnostics
+	Generation diagnostics…	Diagnóstico de generación…
+	Generation quality	Calidad de generación
+	Higher quality does not guarantee better transitions.	Una mayor calidad no garantiza mejores transiciones.
+	API output	Salida de API
+	Working size is calculated locally and sent explicitly.	El tamaño de trabajo se calcula localmente y se envía explícitamente.
+	Working edge limit (pixels)	Límite del lado de trabajo (píxeles)
+	Local processing	Procesamiento local
+	Check preserved context alignment	Comprobar alineación del contexto conservado
+	Correct reliable small translations	Corregir desplazamientos pequeños fiables
+	Maximum translation (working pixels)	Desplazamiento máximo (píxeles de trabajo)
+	Transition width (document pixels)	Ancho de transición (píxeles del documento)
+	Match boundary color (experimental)	Ajustar color del borde (experimental)
+	Keep diagnostics for explicit export	Conservar diagnóstico para exportación explícita
+	Diagnostics contain images and prompts. Nothing is exported automatically.	El diagnóstico contiene imágenes y textos. No se exporta automáticamente.
+	Working surface	Superficie de trabajo
+	Export diagnostics…	Exportar diagnóstico…
+	Import diagnostics…	Importar diagnóstico…
+	Replay offline	Procesar de nuevo sin conexión
+	Alignment	Alineación
+	Document source	Origen del documento
+	Transmitted source	Origen enviado
+	Generation mask (alpha)	Máscara de generación (alfa)
+	Unmodified response	Respuesta sin modificar
+	Mapped result	Resultado transformado
+	Insertion mask (alpha)	Máscara de inserción (alfa)
+	Final result	Resultado final
+	No diagnostic capture. Enable diagnostics before generating, or import a capture.	Sin diagnóstico. Actívelo antes de generar o importe uno.
+	Plausible	Plausible
+	Translation corrected	Desplazamiento corregido
+	Translation requires correction	El desplazamiento requiere corrección
+	Geometric deviation	Desviación geométrica
+	Insufficient context	Contexto insuficiente
+	Disabled	Desactivado
+	Transparent areas are editable; opaque areas are protected.	Las áreas transparentes son editables; las opacas están protegidas.
+	Result applied	Resultado aplicado
+	Preview only	Solo vista previa
+	Diagnostics saved to {path}.	Diagnóstico guardado en {path}.
+	Diagnostic file picker is unavailable.	El selector de archivos de diagnóstico no está disponible.
+	Apply the diagnostic setting before generating. Earlier attempts were not retained.	Aplica la opción de diagnóstico antes de generar. Los intentos anteriores no se conservaron.

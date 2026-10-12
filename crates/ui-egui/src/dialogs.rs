@@ -154,7 +154,8 @@ pub fn show(app: &mut PhotocraftApp, ctx: &egui::Context) {
             }
             sizing = ui.is_sizing_pass();
             ui.set_min_width(380.0);
-            let wide = crate::prefs_ui::width(&d.fields, (ctx.content_rect().width() - 48.0).max(380.0));
+            let wide = crate::prefs_ui::width(&d.fields, (ctx.content_rect().width() - 48.0).max(380.0))
+                .or_else(|| crate::generative_diagnostics_ui::owns(&d.fields).then_some(600.0));
             if let Some(w) = wide {
                 ui.set_min_width(w.min(460.0));
             }
@@ -225,6 +226,9 @@ pub fn show(app: &mut PhotocraftApp, ctx: &egui::Context) {
                     }
                     ui.add_space(8.0);
                     about_tab_body(app, ui, chosen);
+                }
+                DialogKind::Command if crate::generative_diagnostics_ui::owns(&fields) => {
+                    crate::generative_diagnostics_ui::body(app, ui, &mut fields);
                 }
                 DialogKind::Command if crate::generative_ui::owns(&fields) => {
                     generative_prompt_focused = crate::generative_ui::body(app, ui, &mut fields);
@@ -503,6 +507,7 @@ pub fn confirm(app: &mut PhotocraftApp, id: u64) -> Result<Value, String> {
             }
             r
         }
+        DialogKind::Command if crate::generative_diagnostics_ui::owns(&d.fields) => Ok(json!({})),
         DialogKind::Command if crate::generative_ui::owns(&d.fields) => crate::generative_ui::confirm(app, &d.fields),
         DialogKind::Command if crate::guide_layout_ui::owns(&d.fields) => crate::guide_layout_ui::confirm(app, &d.fields),
         DialogKind::Command if crate::fill_ui::owns(&d.fields) => crate::fill_ui::confirm(app, &d.fields),

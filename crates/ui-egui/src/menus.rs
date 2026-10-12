@@ -21,6 +21,9 @@ pub const TOP_MENUS: [&str; 10] = ["File", "Edit", "Image", "Layer", "Type", "Se
 
 /// UI-level commands (handled by the shell rather than the engine): id, label, menu, shortcut.
 pub const UI_COMMANDS: &[(&str, &str, &[&str], Option<&str>)] = &[
+    ("ai.diagnostics.show", "Generation diagnostics…", &[], None),
+    ("ai.diagnostics.export", "Export diagnostics…", &[], None),
+    ("ai.diagnostics.import", "Import diagnostics…", &[], None),
     ("ui.symmetryTransform", "Transform Symmetry", &[], None),
     // Right-click the options bar's tool icon (#2825); `tool.resetAll` asks first.
     ("tool.reset", "Reset Tool", &[], None),
@@ -738,6 +741,7 @@ pub fn is_enabled(app: &PhotocraftApp, id: &str) -> bool {
             Some(t) => t.warp.is_none(),
             None => app.session.active().and_then(|s| s.active_layer).is_some(),
         },
+        "ai.diagnostics.show" | "ai.diagnostics.export" | "ai.diagnostics.import" => true,
         // A targeted layer mask enables what edits it (Invert on an adjustment layer's mask).
         i => app.session.is_enabled_with(i, &app.with_mask_target(i, Value::Null)),
     }

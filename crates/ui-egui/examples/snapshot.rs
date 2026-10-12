@@ -64,6 +64,18 @@ fn main() {
     // `--background-jobs`: long commands run as background jobs, as in the desktop app (#210).
     let background_jobs = args.iter().any(|a| a == "--background-jobs");
     let custom_titlebar = args.iter().any(|a| a == "--custom-titlebar");
+    // Offline capture preview; replay never contacts a provider or changes a document.
+    let generative_capture = arg(&args, "--generative-capture").and_then(|path| {
+        let path = std::path::Path::new(&path);
+        use std::io::Read;
+        let mut bytes = Vec::new();
+        let file = std::fs::File::open(path).ok()?;
+        file.take(photocraft_engine::generative_pipeline::Diagnostic::MAX_BYTES as u64 + 1).read_to_end(&mut bytes).ok()?;
+        if bytes.len() > photocraft_engine::generative_pipeline::Diagnostic::MAX_BYTES {
+            return None;
+        }
+        serde_json::from_slice::<Value>(&bytes).ok()
+    });
     let generative_preview = args.iter().any(|arg| arg == "--generative-preview");
     // `--settle-ms N`: keep rendering frames for N ms before the capture (e.g. mid-job).
     let settle_ms: u64 = arg(&args, "--settle-ms").and_then(|s| s.parse().ok()).unwrap_or(0);
@@ -78,6 +90,12 @@ fn main() {
             services.is_wayland = wayland_notice;
             services.xwayland_command = wayland_notice.then(|| "WAYLAND_DISPLAY= photocraft".into());
             let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), services);
+            if let Some(capture) = generative_capture.clone()
+                && let Err(error) = app.run("ai.replay", serde_json::json!({"capture":capture}))
+            {
+                app.ui.status = error;
+                app.ui.status_error = true;
+            }
             app.background_jobs = background_jobs;
             app.custom_titlebar = custom_titlebar;
             // `--safe-gpu`: the CPU canvas, as the desktop app's `--safe-gpu` launch.
@@ -154,6 +172,18 @@ fn main() {
         harness.step();
         harness.event(egui::Event::PointerButton { pos, button, pressed: false, modifiers: egui::Modifiers::NONE });
         harness.run_steps(4);
+    }
+    if let Some((x, y)) = arg(&args, "--scroll-at").and_then(|s| s.split_once(',').and_then(|(x, y)| Some((x.parse::<f32>().ok()?, y.parse::<f32>().ok()?)))) {
+        let delta = arg(&args, "--scroll-y").and_then(|s| s.parse::<f32>().ok()).unwrap_or(-400.);
+        harness.event(egui::Event::PointerMoved(egui::pos2(x, y)));
+        harness.step();
+        harness.event(egui::Event::MouseWheel {
+            unit: egui::MouseWheelUnit::Point,
+            delta: egui::vec2(0., delta),
+            phase: egui::TouchPhase::Move,
+            modifiers: egui::Modifiers::NONE,
+        });
+        harness.run_steps(12);
     }
     let t_settle = std::time::Instant::now();
     while t_settle.elapsed() < std::time::Duration::from_millis(settle_ms) {

@@ -592,3 +592,14 @@ Each phase ends with a demoable build and green CI on all targets. Phases 8–10
 |---|---|---|
 | 2026-10-10 | minor | Current-state summary and deviations from the plan; status line; broken link to `photoshop-parity.md` repointed to `target-app-parity.md` |
 | 2026-09-30 | major | Design plan v1 |
+
+## Generative image geometry and diagnostics (2026-10-10)
+
+The fork keeps the provider-neutral v2 contract and capabilities in `photocraft-ai`, HTTPS in
+`photocraft-ai-openai`, and editor colour/history/selection work in the engine.
+`generative_pipeline` shares one uniform pixel-centre transform between Fill, Remove and Expand,
+validates exact returned dimensions, checks preserved context alignment and processes bounded
+offline responses. API and local preferences are typed separately. Runtime diagnostics never
+belong to a document or persistent preferences; only explicit host export writes them.
+The UI only edits preference drafts, selects/checkerboards diagnostic images and uses host
+services for import/export. See [the complete workflow](generative-ai.md#geometry-and-quality-2026-10-10).

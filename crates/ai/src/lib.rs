@@ -4,7 +4,9 @@
 use base64::Engine as _;
 use serde::{Deserialize, Serialize};
 
-pub const VERSION: u32 = 1;
+pub const VERSION: u32 = 2;
+mod geometry;
+pub use geometry::{ApiOptions, Capabilities, GeometryPlan, Quality};
 pub const DEFAULT_MODEL: &str = "gpt-image-2.5-sunburst";
 pub const MAX_IMAGE_BYTES: usize = 12 * 1024 * 1024;
 pub const MAX_MASK_BYTES: usize = 4 * 1024 * 1024 - 1;
@@ -79,11 +81,14 @@ pub struct Request {
     pub operation: Operation,
     pub prompt: String,
     pub model: String,
+    #[serde(default)]
+    pub options: ApiOptions,
     pub source: PngImage,
     pub mask: PngImage,
 }
 impl Request {
     pub fn validate(&self) -> Result<()> {
+        self.options.validate()?;
         if self.version != VERSION {
             return Err(Error::Invalid("unsupported protocol version".into()));
         }
@@ -105,6 +110,9 @@ impl Request {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Response {
+    /// Provider-reported resolved quality, if available. None never fabricates a resolved auto value.
+    #[serde(default)]
+    pub quality: Option<Quality>,
     pub version: u32,
     pub image: PngImage,
 }
@@ -113,6 +121,10 @@ pub struct Response {
 /// Cancellation must prevent result application; it need not stop remote billing.
 pub trait Backend: Send + Sync {
     fn id(&self) -> &'static str;
+    /// Providers advertise supported output geometry, without leaking their transport.
+    fn capabilities(&self, _model: &str) -> Result<Capabilities> {
+        Ok(Capabilities::native())
+    }
     fn generate(&self, request: &Request, cancelled: &(dyn Fn() -> bool + Sync)) -> Result<Response>;
 }
 
@@ -121,7 +133,15 @@ mod tests {
     use super::*;
     fn request() -> Request {
         let png = PngImage::from_bytes(1, 1, b"\x89PNG\r\n\x1a\n").unwrap();
-        Request { version: VERSION, operation: Operation::Fill, prompt: "red flower".into(), model: DEFAULT_MODEL.into(), source: png.clone(), mask: png }
+        Request {
+            version: VERSION,
+            operation: Operation::Fill,
+            prompt: "red flower".into(),
+            model: DEFAULT_MODEL.into(),
+            options: ApiOptions::default(),
+            source: png.clone(),
+            mask: png,
+        }
     }
     #[test]
     fn wire_round_trip_and_validation() {

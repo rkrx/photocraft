@@ -49,6 +49,7 @@ pub mod fx_visibility_cmds;
 pub mod gallery_cmds;
 pub mod generative_cmds;
 pub mod generative_expand_cmds;
+pub mod generative_pipeline;
 pub mod gradient_fill_cmds;
 pub mod group_view_cmds;
 pub mod guide_layout;
@@ -348,6 +349,8 @@ impl Default for ToolState {
 pub struct Session {
     /// Runtime-only provider, injected by the host; never stored in documents or journals.
     pub generative_backend: Option<Arc<dyn photocraft_ai::Backend>>,
+    /// One opt-in bounded capture, runtime only; not a document, preference or credential store.
+    pub generative_diagnostic: Arc<std::sync::Mutex<Option<generative_pipeline::Diagnostic>>>,
     docs: Vec<DocState>,
     active: Option<usize>,
     pub tools: ToolState,

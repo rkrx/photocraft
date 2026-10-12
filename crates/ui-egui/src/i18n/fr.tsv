@@ -3075,3 +3075,43 @@ curves	Smooth	Lisser
 	API charges may apply. Canvas expansion and the new layer form one undo step.	Des frais API peuvent s’appliquer. L’extension du canevas et le nouveau calque forment une seule étape d’annulation.
 	Remember last text per AI dialog	Mémoriser le dernier texte de chaque dialogue IA
 	Turning this off clears the saved AI texts.	La désactivation efface les textes IA enregistrés.
+
+# Generative geometry, quality and explicit offline diagnostics
+	Generation diagnostics…	Diagnostic de génération…
+	Generation quality	Qualité de génération
+	Higher quality does not guarantee better transitions.	Une qualité supérieure ne garantit pas de meilleures transitions.
+	API output	Sortie API
+	Working size is calculated locally and sent explicitly.	La taille de travail est calculée localement et transmise explicitement.
+	Working edge limit (pixels)	Limite du côté de travail (pixels)
+	Local processing	Traitement local
+	Check preserved context alignment	Vérifier l’alignement du contexte préservé
+	Correct reliable small translations	Corriger les petits décalages fiables
+	Maximum translation (working pixels)	Décalage maximal (pixels de travail)
+	Transition width (document pixels)	Largeur de transition (pixels du document)
+	Match boundary color (experimental)	Adapter la couleur du bord (expérimental)
+	Keep diagnostics for explicit export	Conserver le diagnostic pour un export explicite
+	Diagnostics contain images and prompts. Nothing is exported automatically.	Le diagnostic contient des images et des textes. Aucun export automatique.
+	Working surface	Surface de travail
+	Export diagnostics…	Exporter le diagnostic…
+	Import diagnostics…	Importer un diagnostic…
+	Replay offline	Retraiter hors ligne
+	Document source	Source du document
+	Transmitted source	Source transmise
+	Generation mask (alpha)	Masque de génération (alpha)
+	Unmodified response	Réponse non modifiée
+	Mapped result	Résultat remappé
+	Insertion mask (alpha)	Masque d’insertion (alpha)
+	Final result	Résultat final
+	No diagnostic capture. Enable diagnostics before generating, or import a capture.	Aucun diagnostic. Activez-le avant la génération ou importez-en un.
+	Plausible	Plausible
+	Translation corrected	Décalage corrigé
+	Translation requires correction	Le décalage nécessite une correction
+	Geometric deviation	Écart géométrique
+	Insufficient context	Contexte insuffisant
+	Disabled	Désactivé
+	Transparent areas are editable; opaque areas are protected.	Les zones transparentes sont modifiables ; les zones opaques sont protégées.
+	Result applied	Résultat appliqué
+	Preview only	Aperçu uniquement
+	Diagnostics saved to {path}.	Diagnostic enregistré dans {path}.
+	Diagnostic file picker is unavailable.	Le sélecteur de fichiers de diagnostic est indisponible.
+	Apply the diagnostic setting before generating. Earlier attempts were not retained.	Appliquez le réglage de diagnostic avant de générer. Les essais précédents n’ont pas été conservés.

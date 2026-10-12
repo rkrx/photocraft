@@ -14,6 +14,7 @@ impl Backend for Paint {
         assert!(!cancelled());
         self.0.lock().unwrap().push(request.clone());
         Ok(Response {
+            quality: None,
             version: VERSION,
             image: shared::encode(
                 request.source.width,
@@ -26,6 +27,7 @@ impl Backend for Paint {
 }
 fn session(depth: u32, mode: &str) -> (Session, Arc<Mutex<Vec<Request>>>) {
     let mut s = Session::new();
+    s.edit_prefs(|p| p.integrations.image_processing.transition_width = 0);
     s.execute("file.new", json!({"width": 8, "height": 8, "depth": depth, "mode": mode, "background": "white"})).unwrap();
     let calls = Arc::new(Mutex::new(Vec::new()));
     s.generative_backend = Some(Arc::new(Paint(calls.clone())));
@@ -63,6 +65,7 @@ fn geometry_preserves_size_and_validates_anchors_and_banner_limits() {
     assert!(banner_size(Size::new(1200, 1200)).is_none());
     assert!(banner_size(Size::new(0, 0)).is_none());
     let mut s = Session::new();
+    s.edit_prefs(|p| p.integrations.image_processing.transition_width = 0);
     assert!(!s.is_enabled(EXPAND));
     s.execute("file.new", json!({"width": 2048, "height": 2048})).unwrap();
     assert!(!s.is_enabled(EXPAND));
@@ -226,9 +229,9 @@ fn failed_malformed_or_transparent_provider_results_never_resize_the_document() 
         fn generate(&self, request: &Request, _: &(dyn Fn() -> bool + Sync)) -> photocraft_ai::Result<Response> {
             match self.0 {
                 0 => Err(photocraft_ai::Error::Provider("synthetic failure".into())),
-                1 => Ok(Response { version: VERSION + 1, image: request.source.clone() }),
-                2 => Ok(Response { version: VERSION, image: shared::encode(8, 8, [255; 4].repeat(64)).unwrap() }),
-                _ => Ok(Response { version: VERSION, image: request.source.clone() }),
+                1 => Ok(Response { quality: None, version: VERSION + 1, image: request.source.clone() }),
+                2 => Ok(Response { quality: None, version: VERSION, image: shared::encode(8, 8, [255; 4].repeat(64)).unwrap() }),
+                _ => Ok(Response { quality: None, version: VERSION, image: request.source.clone() }),
             }
         }
     }

@@ -3771,3 +3771,42 @@ curves	Smooth	Εξομάλυνση
 	API charges may apply. Canvas expansion and the new layer form one undo step.	Ενδέχεται να ισχύουν χρεώσεις API. Η επέκταση καμβά και η νέα στρώση αποτελούν ένα βήμα αναίρεσης.
 	Remember last text per AI dialog	Απομνημόνευση τελευταίου κειμένου ανά διάλογο AI
 	Turning this off clears the saved AI texts.	Η απενεργοποίηση διαγράφει τα αποθηκευμένα κείμενα AI.
+
+# Generative geometry, quality and explicit offline diagnostics
+	Generation diagnostics…	Διαγνωστικά δημιουργίας…
+	Generation quality	Ποιότητα δημιουργίας
+	Higher quality does not guarantee better transitions.	Η υψηλότερη ποιότητα δεν εγγυάται καλύτερες μεταβάσεις.
+	API output	Έξοδος API
+	Working size is calculated locally and sent explicitly.	Το μέγεθος εργασίας υπολογίζεται τοπικά και αποστέλλεται ρητά.
+	Working edge limit (pixels)	Όριο πλευράς εργασίας (εικονοστοιχεία)
+	Local processing	Τοπική επεξεργασία
+	Check preserved context alignment	Έλεγχος ευθυγράμμισης διατηρημένου περιβάλλοντος
+	Correct reliable small translations	Διόρθωση αξιόπιστων μικρών μετατοπίσεων
+	Maximum translation (working pixels)	Μέγιστη μετατόπιση (εικονοστοιχεία εργασίας)
+	Transition width (document pixels)	Πλάτος μετάβασης (εικονοστοιχεία εγγράφου)
+	Match boundary color (experimental)	Προσαρμογή χρώματος ορίου (πειραματικό)
+	Keep diagnostics for explicit export	Διατήρηση διαγνωστικών για ρητή εξαγωγή
+	Diagnostics contain images and prompts. Nothing is exported automatically.	Τα διαγνωστικά περιέχουν εικόνες και κείμενα. Δεν εξάγεται τίποτα αυτόματα.
+	Working surface	Επιφάνεια εργασίας
+	Export diagnostics…	Εξαγωγή διαγνωστικών…
+	Import diagnostics…	Εισαγωγή διαγνωστικών…
+	Replay offline	Επανεπεξεργασία εκτός σύνδεσης
+	Document source	Πηγή εγγράφου
+	Transmitted source	Αποσταλμένη πηγή
+	Generation mask (alpha)	Μάσκα δημιουργίας (άλφα)
+	Unmodified response	Αμετάβλητη απόκριση
+	Mapped result	Μετασχηματισμένο αποτέλεσμα
+	Insertion mask (alpha)	Μάσκα εισαγωγής (άλφα)
+	Final result	Τελικό αποτέλεσμα
+	No diagnostic capture. Enable diagnostics before generating, or import a capture.	Δεν υπάρχουν διαγνωστικά. Ενεργοποιήστε τα πριν τη δημιουργία ή εισαγάγετε ένα αρχείο.
+	Plausible	Εύλογη
+	Translation corrected	Η μετατόπιση διορθώθηκε
+	Translation requires correction	Η μετατόπιση απαιτεί διόρθωση
+	Geometric deviation	Γεωμετρική απόκλιση
+	Insufficient context	Ανεπαρκές περιβάλλον
+	Transparent areas are editable; opaque areas are protected.	Οι διαφανείς περιοχές είναι επεξεργάσιμες· οι αδιαφανείς προστατεύονται.
+	Result applied	Το αποτέλεσμα εφαρμόστηκε
+	Preview only	Μόνο προεπισκόπηση
+	Diagnostics saved to {path}.	Τα διαγνωστικά αποθηκεύτηκαν στο {path}.
+	Diagnostic file picker is unavailable.	Η επιλογή αρχείου διαγνωστικών δεν είναι διαθέσιμη.
+	Apply the diagnostic setting before generating. Earlier attempts were not retained.	Εφαρμόστε τη ρύθμιση διαγνωστικών πριν τη δημιουργία. Οι προηγούμενες προσπάθειες δεν διατηρήθηκαν.

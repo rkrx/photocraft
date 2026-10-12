@@ -90,6 +90,14 @@ When parity rises, raise `FLOOR` in `crates/ui-egui/src/parity.rs` (never lower 
 
 ## 5. Before you finish a task
 
+**Local build storage:** use `cargo xtask step -- <build|check|test|clippy|run> ...` for individual
+Cargo compilation steps. It cleans disposable native debug intermediates after the child process
+exits, including on failure. Existing xtask compilation subprocesses already do this. If a direct
+Cargo invocation is needed, run `cargo xtask clean-build` after the step. The cleanup holds Cargo's
+build lock and retains finished binaries/libraries/fingerprints; never delete live build directories
+by hand. Incremental dev/test compilation is disabled by default to prevent large cache histories.
+See `docs/development.md` → "Keeping local build storage small" for scope and opt-outs.
+
 ```sh
 cargo test -p <crates you touched>
 cargo clippy -p <crates> --all-targets -- -D warnings

@@ -1034,6 +1034,12 @@ pub fn body(app: &mut PhotocraftApp, ui: &mut egui::Ui, f: &mut Map<String, Valu
 }
 
 fn humanize(key: &str) -> String {
+    if key == "imageOptions" {
+        return "API output".into();
+    }
+    if key == "imageProcessing" {
+        return "Local processing".into();
+    }
     if key == "rememberDialogTexts" {
         return "Remember last text per AI dialog".into();
     }
@@ -1218,6 +1224,7 @@ fn prefs_body(app: &mut PhotocraftApp, ui: &mut egui::Ui, f: &mut Map<String, Va
                         );
                     }
                     if section == "integrations" {
+                        crate::generative_ui::options_body(ui, obj, f);
                         crate::generative_ui::settings_body(app, ui);
                     }
                     if section == "performance" {
@@ -1483,6 +1490,7 @@ fn section_fields(
             if (section == "interface" && matches!(k.as_str(), "theme" | "appearanceMode" | "darkTheme" | "lightTheme" | "favoriteThemes"))
                 // View › Rulers (⌘R) sets it, as in Photoshop.
                 || path == "unitsAndRulers.showRulers"
+                || matches!(path.as_str(), "integrations.imageModel" | "integrations.imageOptions" | "integrations.imageProcessing")
                 || prefs::is_hidden(&path)
                 || (section == "performance" && matches!(k.as_str(), "useGpu" | "gpuBackend" | "renderingMode"))
                 || (section == "export" && !export_field_visible(obj, &k))
@@ -1500,6 +1508,11 @@ fn section_fields(
                         ui.vertical(|ui| {
                             crate::widgets::checkbox(ui, &mut b, &label);
                             ui.label(RichText::new(tl!("Applies at next launch.")).color(t.text_dim));
+                        });
+                    } else if path == "integrations.rememberDialogTexts" {
+                        ui.vertical(|ui| {
+                            crate::widgets::checkbox(ui, &mut b, &label);
+                            ui.small(tl!("Turning this off clears the saved AI texts."));
                         });
                     } else {
                         crate::widgets::checkbox(ui, &mut b, &label);

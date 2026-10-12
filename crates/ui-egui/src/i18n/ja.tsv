@@ -3683,3 +3683,43 @@ curves	Smooth	スムーズ
 	API charges may apply. Canvas expansion and the new layer form one undo step.	API料金が発生する場合があります。カンバスの拡張と新しいレイヤーは1回の取り消しで戻せます。
 	Remember last text per AI dialog	AIダイアログごとに最後のテキストを記憶
 	Turning this off clears the saved AI texts.	オフにすると、保存されたAIテキストが削除されます。
+
+# Generative geometry, quality and explicit offline diagnostics
+	Generation diagnostics…	生成診断…
+	Generation quality	生成品質
+	Higher quality does not guarantee better transitions.	高品質でも自然な境界が保証されるわけではありません。
+	API output	API出力
+	Working size is calculated locally and sent explicitly.	作業サイズはローカルで計算し、明示的に送信します。
+	Working edge limit (pixels)	作業領域の辺の上限（ピクセル）
+	Local processing	ローカル処理
+	Check preserved context alignment	保持した周辺領域の位置合わせを確認
+	Correct reliable small translations	確実に検出した小さなずれを補正
+	Maximum translation (working pixels)	最大補正量（作業ピクセル）
+	Transition width (document pixels)	境界の幅（ドキュメントピクセル）
+	Match boundary color (experimental)	境界の色を合わせる（実験的）
+	Keep diagnostics for explicit export	明示的な書き出し用に診断を保持
+	Diagnostics contain images and prompts. Nothing is exported automatically.	診断には画像とテキストが含まれます。自動では書き出しません。
+	Working surface	作業領域
+	Export diagnostics…	診断を書き出し…
+	Import diagnostics…	診断を読み込み…
+	Replay offline	オフラインで再処理
+	Document source	ドキュメントの元画像
+	Transmitted source	送信した元画像
+	Generation mask (alpha)	生成マスク（アルファ）
+	Unmodified response	未変更の応答画像
+	Mapped result	逆変換した結果
+	Insertion mask (alpha)	挿入マスク（アルファ）
+	Final result	最終結果
+	No diagnostic capture. Enable diagnostics before generating, or import a capture.	診断がありません。生成前に有効にするか、診断を読み込んでください。
+	Plausible	妥当
+	Translation corrected	位置ずれを補正済み
+	Translation requires correction	位置ずれの補正が必要
+	Geometric deviation	幾何学的な不一致
+	Insufficient context	周辺情報が不足
+	Disabled	無効
+	Transparent areas are editable; opaque areas are protected.	透明な領域は編集可能、不透明な領域は保護されています。
+	Result applied	結果を適用済み
+	Preview only	プレビューのみ
+	Diagnostics saved to {path}.	診断を {path} に保存しました。
+	Diagnostic file picker is unavailable.	診断ファイルの選択機能を利用できません。
+	Apply the diagnostic setting before generating. Earlier attempts were not retained.	生成する前に診断設定を適用してください。以前の試行は保存されていません。

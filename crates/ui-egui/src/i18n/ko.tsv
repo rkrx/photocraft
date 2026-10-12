@@ -3243,3 +3243,44 @@ curves	Smooth	매끄럽게
 	API charges may apply. Canvas expansion and the new layer form one undo step.	API 요금이 발생할 수 있습니다. 캔버스 확장과 새 레이어는 한 번의 실행 취소로 되돌릴 수 있습니다.
 	Remember last text per AI dialog	AI 대화상자별 마지막 텍스트 기억
 	Turning this off clears the saved AI texts.	이 옵션을 끄면 저장된 AI 텍스트가 삭제됩니다.
+
+# Generative geometry, quality and explicit offline diagnostics
+	Generation diagnostics…	생성 진단…
+	Generation quality	생성 품질
+	Higher quality does not guarantee better transitions.	높은 품질이 더 나은 경계 연결을 보장하지는 않습니다.
+	API output	API 출력
+	Working size is calculated locally and sent explicitly.	작업 크기는 로컬에서 계산하여 명시적으로 전송합니다.
+	Working edge limit (pixels)	작업 영역 변의 제한 (픽셀)
+	Local processing	로컬 처리
+	Check preserved context alignment	보존된 주변 영역의 정렬 확인
+	Correct reliable small translations	확실하게 감지된 작은 이동 보정
+	Maximum translation (working pixels)	최대 이동 (작업 픽셀)
+	Transition width (document pixels)	경계 폭 (문서 픽셀)
+	Match boundary color (experimental)	경계 색상 맞추기 (실험적)
+	Keep diagnostics for explicit export	명시적 내보내기를 위해 진단 유지
+	Diagnostics contain images and prompts. Nothing is exported automatically.	진단에는 이미지와 텍스트가 포함됩니다. 자동으로 내보내지 않습니다.
+	Working surface	작업 영역
+	Export diagnostics…	진단 내보내기…
+	Import diagnostics…	진단 가져오기…
+	Replay offline	오프라인 재처리
+	Alignment	정렬
+	Document source	문서 원본
+	Transmitted source	전송된 원본
+	Generation mask (alpha)	생성 마스크 (알파)
+	Unmodified response	변경되지 않은 응답
+	Mapped result	역변환 결과
+	Insertion mask (alpha)	삽입 마스크 (알파)
+	Final result	최종 결과
+	No diagnostic capture. Enable diagnostics before generating, or import a capture.	진단이 없습니다. 생성 전에 활성화하거나 진단을 가져오세요.
+	Plausible	타당함
+	Translation corrected	이동 보정됨
+	Translation requires correction	이동 보정 필요
+	Geometric deviation	기하학적 불일치
+	Insufficient context	주변 정보 부족
+	Disabled	비활성화
+	Transparent areas are editable; opaque areas are protected.	투명한 영역은 편집 가능하며 불투명한 영역은 보호됩니다.
+	Result applied	결과 적용됨
+	Preview only	미리보기만
+	Diagnostics saved to {path}.	진단을 {path}에 저장했습니다.
+	Diagnostic file picker is unavailable.	진단 파일 선택기를 사용할 수 없습니다.
+	Apply the diagnostic setting before generating. Earlier attempts were not retained.	생성하기 전에 진단 설정을 적용하세요. 이전 시도는 보관되지 않았습니다.

@@ -79,6 +79,10 @@ opt-level = 1
 # CARGO_PROFILE_DEV_DEBUG. To inspect locals in a debugger, build with CARGO_PROFILE_DEV_DEBUG=true.
 debug = "line-tables-only"
 
+# Hundreds of native test/example targets otherwise retain tens of GB of incremental objects.
+# Finished dependency libraries remain cached; opt in locally with CARGO_INCREMENTAL=1.
+incremental = false
+
 [profile.release]
 lto = "thin"
 codegen-units = 1

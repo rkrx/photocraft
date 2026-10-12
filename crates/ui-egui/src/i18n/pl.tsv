@@ -3670,3 +3670,43 @@ curves	Smooth	Wygładź
 	API charges may apply. Canvas expansion and the new layer form one undo step.	Mogą obowiązywać opłaty API. Rozszerzenie płótna i nowa warstwa tworzą jeden krok cofania.
 	Remember last text per AI dialog	Zapamiętaj ostatni tekst dla każdego okna AI
 	Turning this off clears the saved AI texts.	Wyłączenie usuwa zapisane teksty AI.
+
+# Generative geometry, quality and explicit offline diagnostics
+	Generation diagnostics…	Diagnostyka generowania…
+	Generation quality	Jakość generowania
+	Higher quality does not guarantee better transitions.	Wyższa jakość nie gwarantuje lepszych przejść.
+	API output	Wyjście API
+	Working size is calculated locally and sent explicitly.	Rozmiar roboczy jest obliczany lokalnie i jawnie przesyłany.
+	Working edge limit (pixels)	Limit boku roboczego (piksele)
+	Local processing	Przetwarzanie lokalne
+	Check preserved context alignment	Sprawdź wyrównanie zachowanego kontekstu
+	Correct reliable small translations	Koryguj pewne małe przesunięcia
+	Maximum translation (working pixels)	Maksymalne przesunięcie (piksele robocze)
+	Transition width (document pixels)	Szerokość przejścia (piksele dokumentu)
+	Match boundary color (experimental)	Dopasuj kolor krawędzi (eksperymentalne)
+	Keep diagnostics for explicit export	Zachowaj diagnostykę do jawnego eksportu
+	Diagnostics contain images and prompts. Nothing is exported automatically.	Diagnostyka zawiera obrazy i teksty. Nic nie jest eksportowane automatycznie.
+	Working surface	Obszar roboczy
+	Export diagnostics…	Eksportuj diagnostykę…
+	Import diagnostics…	Importuj diagnostykę…
+	Replay offline	Przetwórz ponownie offline
+	Document source	Źródło dokumentu
+	Transmitted source	Przesłane źródło
+	Generation mask (alpha)	Maska generowania (alfa)
+	Unmodified response	Niezmieniona odpowiedź
+	Mapped result	Przekształcony wynik
+	Insertion mask (alpha)	Maska wstawiania (alfa)
+	Final result	Wynik końcowy
+	No diagnostic capture. Enable diagnostics before generating, or import a capture.	Brak diagnostyki. Włącz ją przed generowaniem lub zaimportuj diagnostykę.
+	Plausible	Wiarygodne
+	Translation corrected	Przesunięcie skorygowane
+	Translation requires correction	Przesunięcie wymaga korekty
+	Geometric deviation	Odchylenie geometryczne
+	Insufficient context	Niewystarczający kontekst
+	Disabled	Wyłączone
+	Transparent areas are editable; opaque areas are protected.	Obszary przezroczyste można edytować; obszary nieprzezroczyste są chronione.
+	Result applied	Wynik zastosowany
+	Preview only	Tylko podgląd
+	Diagnostics saved to {path}.	Diagnostykę zapisano w {path}.
+	Diagnostic file picker is unavailable.	Wybór pliku diagnostyki jest niedostępny.
+	Apply the diagnostic setting before generating. Earlier attempts were not retained.	Zastosuj ustawienie diagnostyki przed generowaniem. Wcześniejsze próby nie zostały zachowane.

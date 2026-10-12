@@ -3019,3 +3019,43 @@ curves	Smooth	Сгладить
 	API charges may apply. Canvas expansion and the new layer form one undo step.	Может взиматься плата за API. Расширение холста и новый слой образуют один шаг отмены.
 	Remember last text per AI dialog	Запоминать последний текст для каждого диалога ИИ
 	Turning this off clears the saved AI texts.	Отключение удаляет сохранённые тексты ИИ.
+
+# Generative geometry, quality and explicit offline diagnostics
+	Generation diagnostics…	Диагностика генерации…
+	Generation quality	Качество генерации
+	Higher quality does not guarantee better transitions.	Более высокое качество не гарантирует лучшие переходы.
+	API output	Вывод API
+	Working size is calculated locally and sent explicitly.	Рабочий размер вычисляется локально и передаётся явно.
+	Working edge limit (pixels)	Предел рабочей стороны (пиксели)
+	Local processing	Локальная обработка
+	Check preserved context alignment	Проверять совмещение сохранённого контекста
+	Correct reliable small translations	Исправлять надёжно выявленные малые сдвиги
+	Maximum translation (working pixels)	Максимальный сдвиг (рабочие пиксели)
+	Transition width (document pixels)	Ширина перехода (пиксели документа)
+	Match boundary color (experimental)	Подбирать цвет границы (экспериментально)
+	Keep diagnostics for explicit export	Сохранять диагностику для явного экспорта
+	Diagnostics contain images and prompts. Nothing is exported automatically.	Диагностика содержит изображения и тексты. Ничего не экспортируется автоматически.
+	Working surface	Рабочая поверхность
+	Export diagnostics…	Экспорт диагностики…
+	Import diagnostics…	Импорт диагностики…
+	Replay offline	Повторная обработка офлайн
+	Document source	Исходное изображение документа
+	Transmitted source	Переданное изображение
+	Generation mask (alpha)	Маска генерации (альфа)
+	Unmodified response	Неизменённый ответ
+	Mapped result	Преобразованный результат
+	Insertion mask (alpha)	Маска вставки (альфа)
+	Final result	Итоговый результат
+	No diagnostic capture. Enable diagnostics before generating, or import a capture.	Нет диагностики. Включите её перед генерацией или импортируйте файл.
+	Plausible	Правдоподобно
+	Translation corrected	Сдвиг исправлен
+	Translation requires correction	Сдвиг требует исправления
+	Geometric deviation	Геометрическое отклонение
+	Insufficient context	Недостаточно контекста
+	Disabled	Отключено
+	Transparent areas are editable; opaque areas are protected.	Прозрачные области доступны для редактирования; непрозрачные защищены.
+	Result applied	Результат применён
+	Preview only	Только просмотр
+	Diagnostics saved to {path}.	Диагностика сохранена в {path}.
+	Diagnostic file picker is unavailable.	Выбор файла диагностики недоступен.
+	Apply the diagnostic setting before generating. Earlier attempts were not retained.	Примените настройку диагностики до генерации. Предыдущие попытки не были сохранены.

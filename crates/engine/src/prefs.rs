@@ -918,6 +918,8 @@ impl Default for RawDefaults {
 pub struct Integrations {
     /// Default generative-image model. Credentials belong to the host, never preferences.
     pub image_model: String,
+    pub image_options: photocraft_ai::ApiOptions,
+    pub image_processing: crate::generative_pipeline::LocalOptions,
     /// Restore the last submitted text separately for each generative dialog.
     pub remember_dialog_texts: bool,
     /// Allow agents to drive the app over the loopback control channel / MCP bridge.
@@ -928,7 +930,14 @@ pub struct Integrations {
 
 impl Default for Integrations {
     fn default() -> Self {
-        Self { image_model: photocraft_ai::DEFAULT_MODEL.into(), remember_dialog_texts: true, allow_agent_control: true, control_port: 0 }
+        Self {
+            image_model: photocraft_ai::DEFAULT_MODEL.into(),
+            image_options: Default::default(),
+            image_processing: Default::default(),
+            remember_dialog_texts: true,
+            allow_agent_control: true,
+            control_port: 0,
+        }
     }
 }
 
@@ -1324,7 +1333,10 @@ impl Preferences {
         check_value(path, &value)?;
         let mut root = self.to_json();
         set_path(&mut root, path, value)?;
-        *self = serde_json::from_value(root).map_err(|e| format!("invalid value for `{path}`: {e}"))?;
+        let next: Self = serde_json::from_value(root).map_err(|e| format!("invalid value for `{path}`: {e}"))?;
+        next.integrations.image_options.validate().map_err(|e| e.to_string())?;
+        next.integrations.image_processing.validate().map_err(|e| e.to_string())?;
+        *self = next;
         Ok(())
     }
 
@@ -1565,6 +1577,14 @@ impl Session {
         let color = v.as_object_mut().and_then(|m| m.remove("colorSettings"));
         let presets = v.as_object_mut().and_then(|m| m.remove("presets"));
         let prefs: Preferences = serde_json::from_value(v).map_err(|e| format!("preferences: {e}"))?;
+        prefs.integrations.image_options.validate().map_err(|e| e.to_string())?;
+        prefs.integrations.image_processing.validate().map_err(|e| e.to_string())?;
+        if let Some(caps) = photocraft_ai::Capabilities::for_model(&prefs.integrations.image_model)
+            && !caps.extended_quality
+            && matches!(prefs.integrations.image_options.quality, photocraft_ai::Quality::Xhigh | photocraft_ai::Quality::Max)
+        {
+            return Err("this model does not support xhigh or max quality".into());
+        }
         if let Some(c) = color {
             self.color.settings = serde_json::from_value(c).unwrap_or_default();
             photocraft_compose::psblend::set_text_gamma(self.color.settings.blend_text_gamma);
@@ -1717,6 +1737,14 @@ fn prefs_set(s: &mut Session, p: &Value) -> Result<Value> {
             s.color.settings = saved_color;
             return Err(bad(cmd, e));
         }
+    }
+    if let Some(caps) = photocraft_ai::Capabilities::for_model(&s.prefs().integrations.image_model)
+        && !caps.extended_quality
+        && matches!(s.prefs().integrations.image_options.quality, photocraft_ai::Quality::Xhigh | photocraft_ai::Quality::Max)
+    {
+        s.prefs.edit(|p| *p = saved_prefs);
+        s.color.settings = saved_color;
+        return Err(bad(cmd, "this model does not support xhigh or max quality"));
     }
     // `colorSettings.blendTextGamma` lives in the compositor too, as `edit.colorSettings` sets it.
     photocraft_compose::psblend::set_text_gamma(s.color.settings.blend_text_gamma);
@@ -2009,3 +2037,52 @@ pub fn specs() -> Vec<CommandSpec> {
 #[cfg(test)]
 #[path = "prefs/tests.rs"]
 mod tests;
+
+#[cfg(test)]
+mod generation_quality_tests {
+    use super::*;
+    #[test]
+    fn legacy_preferences_receive_explicit_high_and_conservative_local_defaults() {
+        let mut s = Session::new();
+        s.load_prefs_json(r#"{"integrations":{"imageModel":"gpt-image-2.5-sunburst"}}"#).unwrap();
+        let p = &s.prefs().integrations;
+        assert_eq!(p.image_options.quality, photocraft_ai::Quality::High);
+        assert_eq!(p.image_options.max_working_edge, 2048);
+        assert!(p.image_processing.check_alignment);
+        assert!(p.image_processing.correct_translation);
+        assert_eq!(p.image_processing.max_translation, 4);
+        assert_eq!(p.image_processing.transition_width, 2);
+        assert!(!p.image_processing.diagnostics);
+        assert!(!p.image_processing.match_boundary_color);
+        assert!(p.remember_dialog_texts);
+        let saved = s.prefs_to_json();
+        let mut restored = Session::new();
+        restored.load_prefs_json(&saved).unwrap();
+        assert_eq!(s.prefs(), restored.prefs());
+    }
+    #[test]
+    fn invalid_options_and_unsupported_quality_are_atomic_including_combined_model_changes() {
+        let mut s = Session::new();
+        let original = s.prefs().clone();
+        for (path, value) in [
+            ("integrations.imageOptions.quality", json!("ultra")),
+            ("integrations.imageOptions.maxWorkingEdge", json!(2049)),
+            ("integrations.imageProcessing.maxTranslation", json!(9)),
+            ("integrations.imageProcessing.transitionWidth", json!(-1)),
+            ("integrations.imageProcessing.transitionWidth", json!(1.5)),
+            ("integrations.imageOptions", json!({"seed":1})),
+        ] {
+            assert!(s.execute("prefs.set", json!({"path":path,"value":value})).is_err());
+            assert_eq!(&original, s.prefs());
+        }
+        s.execute("prefs.set", json!({"values":{"integrations.imageModel":"gpt-image-2","integrations.imageOptions.quality":"xhigh"}})).unwrap_err();
+        assert_eq!(&original, s.prefs());
+        s.execute("prefs.set", json!({"values":{"integrations.imageOptions.quality":"xhigh"}})).unwrap();
+        s.execute("prefs.set", json!({"path":"integrations","value":{"imageModel":"gpt-image-2","imageOptions":{"quality":"high"}}})).unwrap();
+        assert_eq!(s.prefs().integrations.image_model, "gpt-image-2");
+        assert_eq!(s.prefs().integrations.image_options.quality, photocraft_ai::Quality::High);
+        let valid = s.prefs().clone();
+        assert!(s.load_prefs_json(r#"{"integrations":{"imageProcessing":{"maxTranslation":100}}}"#).is_err());
+        assert_eq!(s.prefs(), &valid);
+    }
+}

@@ -1,6 +1,7 @@
 use super::*;
 use photocraft_ai::Backend;
 use photocraft_color::ColorMode;
+use photocraft_color::SampleType;
 use std::sync::{
     Mutex,
     atomic::{AtomicUsize, Ordering},
@@ -30,11 +31,12 @@ impl Backend for Solid {
         assert_eq!(source.width(), request.source.width);
         let png = encode(request.source.width, request.source.height, [255, 0, 0, 255].repeat(request.source.width as usize * request.source.height as usize))
             .unwrap();
-        Ok(Response { version: VERSION, image: png })
+        Ok(Response { quality: None, version: VERSION, image: png })
     }
 }
 fn session(depth: u32) -> Session {
     let mut s = Session::new();
+    s.edit_prefs(|p| p.integrations.image_processing.transition_width = 0);
     s.execute("file.new", json!({"width": 8, "height": 8, "depth": depth, "background": "white"})).unwrap();
     s.execute("select.rect", json!({"x": 2, "y": 2, "width": 3, "height": 3})).unwrap();
     s.generative_backend = Some(Arc::new(Solid { calls: Arc::new(AtomicUsize::new(0)), failure: false }));
@@ -53,7 +55,7 @@ fn generative_edits_use_saved_model_and_allow_explicit_command_override() {
         }
         fn generate(&self, request: &Request, _: &(dyn Fn() -> bool + Sync)) -> photocraft_ai::Result<Response> {
             self.0.lock().unwrap().push(request.model.clone());
-            Ok(Response { version: VERSION, image: request.source.clone() })
+            Ok(Response { quality: None, version: VERSION, image: request.source.clone() })
         }
     }
     let mut s = session(8);
@@ -138,7 +140,7 @@ fn result_validation_and_cancellation_never_modify_document() {
     let s = session(16);
     let doc = &s.active().unwrap().doc;
     let ctx = JobCtx::new();
-    let mut response = Response { version: VERSION + 1, image: encode(8, 8, [255, 0, 0, 255].repeat(64)).unwrap() };
+    let mut response = Response { quality: None, version: VERSION + 1, image: encode(8, 8, [255, 0, 0, 255].repeat(64)).unwrap() };
     assert!(result_surface(doc, &response, &ctx).is_err());
     response.version = VERSION;
     response.image.width = 9;
@@ -146,6 +148,8 @@ fn result_validation_and_cancellation_never_modify_document() {
     response.image = encode(8, 4, [255, 0, 0, 255].repeat(32)).unwrap();
     assert!(result_surface(doc, &response, &ctx).is_err());
     response.image = encode(16, 16, [255, 0, 0, 255].repeat(256)).unwrap();
+    assert!(result_surface(doc, &response, &ctx).is_err(), "even an exact multiple is an unexpected size");
+    response.image = encode(8, 8, [255, 0, 0, 255].repeat(64)).unwrap();
     let surface = result_surface(doc, &response, &ctx).unwrap();
     assert_eq!(surface.sample_channel(2, 2, 3), 1.0);
     ctx.cancel();
@@ -164,7 +168,7 @@ fn feathered_selection_is_enforced_locally_and_color_modes_are_preserved() {
             let ctx = JobCtx::new();
             let request = prepare(&doc, operation, "red object".into(), photocraft_ai::DEFAULT_MODEL.into(), &ctx).unwrap();
             request.validate().unwrap();
-            let response = Response { version: VERSION, image: encode(8, 8, [255, 0, 0, 255].repeat(64)).unwrap() };
+            let response = Response { quality: None, version: VERSION, image: encode(8, 8, [255, 0, 0, 255].repeat(64)).unwrap() };
             let surface = result_surface(&doc, &response, &ctx).unwrap();
             assert_eq!(surface.format().mode, mode);
             assert!((surface.sample_channel(2, 2, surface.format().channels() - 1) - 0.5).abs() < 0.005);
@@ -227,7 +231,7 @@ fn remove_reconstructs_the_selection_with_optional_detail_and_keeps_original_pix
             let source = photocraft_codecs::decode(&request.source.bytes(photocraft_ai::MAX_IMAGE_BYTES)?).unwrap();
             assert_eq!(source.get(3, 3, 0), 0.0, "visible object is included in the source");
             self.0.lock().unwrap().push(request.clone());
-            Ok(Response { version: VERSION, image: encode(8, 8, [255, 255, 255, 255].repeat(64)).unwrap() })
+            Ok(Response { quality: None, version: VERSION, image: encode(8, 8, [255, 255, 255, 255].repeat(64)).unwrap() })
         }
     }
     for detail in [None, Some(""), Some("  cable and its shadow  ")] {
@@ -334,4 +338,91 @@ fn composite_edits_are_visible_above_the_stack_when_a_hidden_child_is_active() {
         s.execute("edit.undo", json!({})).unwrap();
         assert_eq!(*s.active().unwrap().doc, *original);
     }
+}
+
+// Exercise the shared pipeline, including strict response validation before native colour conversion.
+fn result_surface(doc: &Document, response: &Response, ctx: &JobCtx) -> Result<Surface> {
+    let request = prepare(doc, Operation::Fill, "test".into(), photocraft_ai::DEFAULT_MODEL.into(), ctx)?;
+    let mut capture = crate::generative_pipeline::prepare(request, photocraft_ai::Capabilities::native(), Default::default(), ctx)?;
+
+    let rgba = crate::generative_pipeline::process(&mut capture, response.clone(), ctx)?;
+    super::result_surface(doc, &rgba, ctx)
+}
+
+#[test]
+fn diagnostic_replay_and_quality_comparison_are_offline_and_opt_in() {
+    struct Echo;
+    impl Backend for Echo {
+        fn id(&self) -> &'static str {
+            "synthetic"
+        }
+        fn capabilities(&self, _: &str) -> photocraft_ai::Result<photocraft_ai::Capabilities> {
+            Ok(photocraft_ai::Capabilities::image2(true))
+        }
+        fn generate(&self, r: &Request, _: &(dyn Fn() -> bool + Sync)) -> photocraft_ai::Result<Response> {
+            Ok(Response { version: VERSION, quality: Some(r.options.quality), image: r.source.clone() })
+        }
+    }
+    let mut s = session(16);
+    s.generative_backend = Some(Arc::new(Echo));
+    s.execute(FILL, json!({"prompt":"offline fixture","consent":true})).unwrap();
+    assert!(s.execute("ai.diagnostics", json!({})).unwrap().is_null());
+    s.edit_prefs(|p| p.integrations.image_processing.diagnostics = true);
+    let result = s.execute(FILL, json!({"prompt":"offline fixture","consent":true})).unwrap();
+    assert_eq!(result["used"]["quality"], "high");
+    let capture = s.execute("ai.diagnostics", json!({})).unwrap();
+    assert_eq!(capture["applied"], true);
+    assert!(capture["response"].is_object());
+    assert!(capture["stages"]["final-result"].is_object());
+    let doc = s.active().unwrap().doc.clone();
+    let journal = s.journal.clone();
+    s.generative_backend = None;
+    let replay = s.execute("ai.replay", json!({"capture":capture})).unwrap();
+    assert_eq!(replay["applied"], false);
+    assert_eq!(replay["stages"]["final-result"], capture["stages"]["final-result"]);
+    assert!(Arc::ptr_eq(&doc, &s.active().unwrap().doc));
+    assert_eq!(s.journal, journal);
+    let pair = s.execute("ai.comparison", json!({})).unwrap();
+    let mut high = pair["high"].clone();
+    high["options"]["quality"] = json!("xhigh");
+    assert_eq!(high, pair["xhigh"], "only quality differs");
+    assert_eq!(pair["networkCalled"], false);
+    let text = pair.to_string();
+    assert!(!text.contains("authorization"));
+    assert!(!text.contains("api_key"));
+    s.execute("ai.diagnostics", json!({"clear":true})).unwrap();
+    assert!(s.execute("ai.replay", json!({})).is_err());
+}
+
+#[test]
+fn running_generation_snapshots_api_and_local_options() {
+    struct Snapshot {
+        ready: std::sync::mpsc::Sender<Request>,
+        release: Mutex<std::sync::mpsc::Receiver<()>>,
+    }
+    impl Backend for Snapshot {
+        fn id(&self) -> &'static str {
+            "snapshot"
+        }
+        fn generate(&self, r: &Request, _: &(dyn Fn() -> bool + Sync)) -> photocraft_ai::Result<Response> {
+            self.ready.send(r.clone()).unwrap();
+            self.release.lock().unwrap().recv().unwrap();
+            Ok(Response { quality: Some(r.options.quality), version: VERSION, image: r.source.clone() })
+        }
+    }
+    let mut s = session(16);
+    s.edit_prefs(|p| p.integrations.image_processing.diagnostics = true);
+    let (ready_tx, ready_rx) = std::sync::mpsc::channel();
+    let (release_tx, release_rx) = std::sync::mpsc::channel();
+    s.generative_backend = Some(Arc::new(Snapshot { ready: ready_tx, release: Mutex::new(release_rx) }));
+
+    let crate::jobs::Started::Job(job) = s.start(FILL, json!({"prompt":"snapshot","consent":true})).unwrap() else { panic!("not a job") };
+    let request = ready_rx.recv_timeout(std::time::Duration::from_secs(5)).unwrap();
+    assert_eq!(request.options.quality, photocraft_ai::Quality::High);
+    s.execute("prefs.set", json!({"values":{"integrations.imageOptions.quality":"xhigh","integrations.imageProcessing.maxTranslation":8}})).unwrap();
+    release_tx.send(()).unwrap();
+    let result = s.wait_job(job).unwrap();
+    assert_eq!(result["used"]["quality"], "high");
+    let capture = s.execute("ai.diagnostics", json!({})).unwrap();
+    assert_eq!(capture["local"]["maxTranslation"], 4);
 }

@@ -3688,3 +3688,44 @@ navigator	Zoom	Zvětšení
 	API charges may apply. Canvas expansion and the new layer form one undo step.	Mohou být účtovány poplatky API. Rozšíření plátna a nová vrstva tvoří jeden krok zpět.
 	Remember last text per AI dialog	Pamatovat si poslední text pro každý dialog AI
 	Turning this off clears the saved AI texts.	Vypnutím se smažou uložené texty AI.
+
+# Generative geometry, quality and explicit offline diagnostics
+	Generation diagnostics…	Diagnostika generování…
+	Generation quality	Kvalita generování
+	Higher quality does not guarantee better transitions.	Vyšší kvalita nezaručuje lepší přechody.
+	API output	Výstup API
+	Working size is calculated locally and sent explicitly.	Pracovní velikost se vypočítá místně a výslovně odešle.
+	Working edge limit (pixels)	Limit pracovní hrany (pixely)
+	Local processing	Místní zpracování
+	Check preserved context alignment	Ověřit zarovnání zachovaného kontextu
+	Correct reliable small translations	Opravit spolehlivě zjištěné malé posuny
+	Maximum translation (working pixels)	Maximální posun (pracovní pixely)
+	Transition width (document pixels)	Šířka přechodu (pixely dokumentu)
+	Match boundary color (experimental)	Přizpůsobit barvu okraje (experimentální)
+	Keep diagnostics for explicit export	Uchovat diagnostiku pro výslovný export
+	Diagnostics contain images and prompts. Nothing is exported automatically.	Diagnostika obsahuje obrázky a texty. Nic se automaticky neexportuje.
+	Working surface	Pracovní plocha
+	Export diagnostics…	Exportovat diagnostiku…
+	Import diagnostics…	Importovat diagnostiku…
+	Replay offline	Zpracovat znovu offline
+	Alignment	Zarovnání
+	Document source	Zdroj dokumentu
+	Transmitted source	Odeslaný zdroj
+	Generation mask (alpha)	Maska generování (alfa)
+	Unmodified response	Nezměněná odpověď
+	Mapped result	Zpětně transformovaný výsledek
+	Insertion mask (alpha)	Maska vložení (alfa)
+	Final result	Konečný výsledek
+	No diagnostic capture. Enable diagnostics before generating, or import a capture.	Žádná diagnostika. Zapněte ji před generováním nebo diagnostiku importujte.
+	Plausible	Věrohodné
+	Translation corrected	Posun opraven
+	Translation requires correction	Posun vyžaduje opravu
+	Geometric deviation	Geometrická odchylka
+	Insufficient context	Nedostatečný kontext
+	Disabled	Vypnuto
+	Transparent areas are editable; opaque areas are protected.	Průhledné oblasti lze upravit; neprůhledné oblasti jsou chráněné.
+	Result applied	Výsledek použit
+	Preview only	Pouze náhled
+	Diagnostics saved to {path}.	Diagnostika uložena do {path}.
+	Diagnostic file picker is unavailable.	Výběr souboru diagnostiky není dostupný.
+	Apply the diagnostic setting before generating. Earlier attempts were not retained.	Před generováním použijte nastavení diagnostiky. Dřívější pokusy nebyly uchovány.

@@ -48,7 +48,7 @@ fn usage_and_unknown_command() {
 #[test]
 fn every_subcommand_answers_help() {
     let d = tmp("help");
-    for sub in ["convert", "info", "run", "batch", "droplet", "commands", "mcp", "serve"] {
+    for sub in ["convert", "info", "generative-remove", "generative-fill", "generative-expand", "run", "batch", "droplet", "commands", "mcp", "serve"] {
         for help in ["--help", "-h"] {
             let o = bin().current_dir(&d).arg(sub).arg(help).arg("--out").arg("x.png").stdin(Stdio::null()).output().unwrap();
             let out = String::from_utf8_lossy(&o.stdout);

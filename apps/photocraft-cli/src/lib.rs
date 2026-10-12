@@ -11,6 +11,8 @@ use photocraft_engine::actions_cmds::Action;
 use photocraft_io::ExportOptions;
 use serde_json::{Value, json};
 
+mod generative;
+
 pub const USAGE: &str = "\
 photocraft-cli: headless Photocraft
 
@@ -23,6 +25,18 @@ USAGE:
       its alpha, 24 none. Without it: 32 with an alpha channel or transparency, else 24.
   photocraft-cli info <file> [--compact]
       Print the document as JSON (size, mode, depth, layer tree).
+  photocraft-cli generative-fill <image> --mask <image> --prompt <text> --out <file>
+      Generate content in the white selection. Takes the common generation flags below.
+  photocraft-cli generative-expand <image> (--width <px> --height <px> | --aspect 16:9) --out <file>
+      [--anchor <center|topLeft|top|topRight|left|right|bottomLeft|bottom|bottomRight>] [--prompt <text>]
+      Extend the canvas without scaling its original content. Takes the common generation flags below.
+  photocraft-cli generative-remove <image> --mask <image> --out <file>
+      [--prompt <object description>] [--model <id>] [--quality <high|xhigh|...>]
+      [--diagnostics <new-directory>] [--response <PNG>] [--consent] [--overwrite]
+      [--mask-mode <auto|api|reference>] [--processing <JSON>]
+      White selects the editable area; black protects it. Uses the same engine action as the UI.
+      Live requests require --consent and OPENAI_API_KEY. --response uses a saved working-size
+      model response offline, without uploading images. Diagnostics are exported even on failure.
   photocraft-cli run (<file> | --new <json>) --cmd <id> [--params <json>] [--cmd …] [--out <file>] [--format <ext>] [--quality <1-100>] [--tiff-layers] [--tga-bits <24|32>]
       Open a file, run engine commands in order, save the result. Each --params
       applies to the preceding --cmd. Prints each command's JSON result.
@@ -69,6 +83,37 @@ struct Subcommand {
 const SUBCOMMANDS: &[Subcommand] = &[
     Subcommand { name: "convert", values: &["--format", "--quality", "--tga-bits"], bare: &["--tiff-layers"], run: convert },
     Subcommand { name: "info", values: &[], bare: &["--compact"], run: |a, out, _| info(a, out) },
+    Subcommand {
+        name: "generative-remove",
+        values: &["--mask", "--out", "--prompt", "--model", "--quality", "--diagnostics", "--response", "--mask-mode", "--processing"],
+        bare: &["--consent", "--overwrite"],
+        run: generative::remove,
+    },
+    Subcommand {
+        name: "generative-fill",
+        values: &["--mask", "--out", "--prompt", "--model", "--quality", "--diagnostics", "--response", "--mask-mode", "--processing"],
+        bare: &["--consent", "--overwrite"],
+        run: generative::fill,
+    },
+    Subcommand {
+        name: "generative-expand",
+        values: &[
+            "--out",
+            "--prompt",
+            "--model",
+            "--quality",
+            "--diagnostics",
+            "--response",
+            "--mask-mode",
+            "--processing",
+            "--width",
+            "--height",
+            "--aspect",
+            "--anchor",
+        ],
+        bare: &["--consent", "--overwrite"],
+        run: generative::expand,
+    },
     Subcommand {
         name: "run",
         values: &["--new", "--cmd", "--params", "--out", "--format", "--quality", "--tga-bits"],

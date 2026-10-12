@@ -3,6 +3,7 @@
 //! Pure Rust (std + serde_json). External tools (`cargo`, `curl`, `tar`) are
 //! invoked through `std::process::Command`.
 
+mod build_cleanup;
 mod corpus;
 mod corpus_pins;
 mod i18n_coverage;
@@ -22,6 +23,10 @@ const USAGE: &str = "\
 usage: cargo xtask <command>
 
 commands:
+  clean-build [--dry-run]
+                  reclaim target/debug incremental caches and leftover codegen objects safely
+  step -- <cargo args>
+                  run a Cargo build/check/test/clippy/run step, then reclaim debug intermediates
   layers          enforce the crate dependency layering (plan/architecture.md §3)
   wasm            cargo check --target wasm32-unknown-unknown for the wasm-safe crates
   ci              fmt --check, clippy -D warnings, test, layers, wasm (stops at first failure)
@@ -52,6 +57,8 @@ fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let rest: Vec<&str> = args.iter().skip(1).map(String::as_str).collect();
     let result = match args.first().map(String::as_str) {
+        Some("clean-build") => cmd_clean_build(&rest),
+        Some("step") => cmd_step(&rest),
         Some("layers") => cmd_layers(),
         Some("wasm") => cmd_wasm(),
         Some("ci") => cmd_ci(),
@@ -93,7 +100,34 @@ pub fn cargo() -> Command {
 fn run(mut cmd: Command, what: &str) -> Result<(), String> {
     eprintln!("$ {what}");
     let status = cmd.status().map_err(|e| format!("{what}: failed to spawn: {e}"))?;
+    if cmd.get_program() == cargo().get_program() && std::env::var("PHOTOCRAFT_BUILD_CLEANUP").as_deref() != Ok("0") {
+        // A concurrent Cargo invocation wins: warn and leave everything in place.
+        match build_cleanup::clean(&root().join("target"), false) {
+            Ok(summary) => build_cleanup::report(&summary, false),
+            Err(e) => eprintln!("build cleanup: {e}"),
+        }
+    }
     if status.success() { Ok(()) } else { Err(format!("{what}: exited with {status}")) }
+}
+
+fn cmd_clean_build(args: &[&str]) -> Result<(), String> {
+    if args.iter().any(|a| *a != "--dry-run") {
+        return Err("usage: cargo xtask clean-build [--dry-run]".into());
+    }
+    let dry_run = args.contains(&"--dry-run");
+    let summary = build_cleanup::clean(&root().join("target"), dry_run)?;
+    build_cleanup::report(&summary, dry_run);
+    Ok(())
+}
+
+fn cmd_step(args: &[&str]) -> Result<(), String> {
+    let args = args.strip_prefix(&["--"]).unwrap_or(args);
+    if !matches!(args.first(), Some(&("build" | "check" | "test" | "clippy" | "run"))) {
+        return Err("usage: cargo xtask step -- <build|check|test|clippy|run> [args...]".into());
+    }
+    let mut cmd = cargo();
+    cmd.args(args);
+    run(cmd, &format!("cargo {}", args.join(" ")))
 }
 
 pub fn metadata() -> Result<serde_json::Value, String> {
